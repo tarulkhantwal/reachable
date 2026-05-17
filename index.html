@@ -25,56 +25,84 @@
 html,body{height:100%;overflow-x:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 
+/* ── Nav ── */
 .nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;background:rgba(249,249,251,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:200}
-.nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none}
-.nav-logo{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer;background:none;border:none;font-family:inherit}
+.nav-logo{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .nav-logo svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-wordmark{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.3px}
-.nav-tabs{display:flex;gap:2px;height:100%;align-items:center}
+.nav-center{display:flex;gap:2px;align-items:center}
 .nav-tab{padding:6px 14px;font-size:13px;font-weight:500;color:var(--text-3);cursor:pointer;border:none;background:none;border-radius:100px;transition:all var(--transition);letter-spacing:-0.1px;font-family:inherit}
 .nav-tab:hover{color:var(--text-2);background:var(--bg2)}
 .nav-tab.active{color:var(--accent);background:var(--accent-soft)}
+.nav-right{display:flex;align-items:center;gap:0.5rem}
+.report-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:100px;border:0.5px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;transition:all var(--transition);font-family:inherit;letter-spacing:-0.1px}
+.report-btn:hover{background:var(--bg2);border-color:#c4c4d0;color:var(--text)}
+.report-btn svg{width:13px;height:13px;flex-shrink:0}
 
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.75rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.12);animation:cardIn 0.2s ease}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem}
+.modal-title{font-size:15px;font-weight:600;letter-spacing:-0.2px}
+.modal-sub{font-size:12px;color:var(--text-3);margin-top:2px;line-height:1.5}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:2px;line-height:1;transition:color var(--transition)}
+.modal-close:hover{color:var(--text)}
+.modal-options{display:flex;flex-direction:column;gap:7px}
+.modal-option{display:flex;align-items:center;gap:12px;padding:0.875rem 1rem;border-radius:var(--radius-sm);border:0.5px solid var(--border);text-decoration:none;color:var(--text);transition:all var(--transition)}
+.modal-option:hover{background:var(--bg);border-color:#c4c4d0}
+.modal-option-icon{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.modal-option-title{font-size:13px;font-weight:500}
+.modal-option-sub{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* ── Panels ── */
 .panel{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
 .panel.active{display:flex}
 
-.tool-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 1.5rem 2rem;flex:1;transition:padding var(--transition),flex var(--transition)}
+/* ── Tool wrap ── */
+.tool-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem 2rem;flex:1;transition:padding var(--transition)}
 .tool-wrap.at-top{flex:none;justify-content:flex-start;padding:1.75rem 1.5rem 0}
 .tool-inner{width:100%;max-width:580px}
 
-.tool-hero{text-align:center;margin-bottom:2.75rem;transition:all 0.4s cubic-bezier(0.4,0,0.2,1);animation:heroIn 0.6s cubic-bezier(0.4,0,0.2,1) both}
-@keyframes heroIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.tool-wrap.at-top .tool-hero{text-align:left;margin-bottom:1.25rem}
-.hero-wordmark{font-size:56px;font-weight:700;letter-spacing:-3px;line-height:1;color:var(--text);transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
+/* ── Hero ── */
+.tool-hero{text-align:center;margin-bottom:2rem;animation:heroIn 0.5s ease both}
+@keyframes heroIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.tool-wrap.at-top .tool-hero{text-align:left;margin-bottom:1rem}
+.hero-wordmark{font-size:52px;font-weight:700;letter-spacing:-3px;line-height:1;color:var(--text);transition:all 0.4s ease}
 .hero-wordmark .accent{color:var(--accent)}
 .tool-wrap.at-top .hero-wordmark{font-size:20px;font-weight:600;letter-spacing:-0.5px}
-.hero-cap{display:block;font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-top:0.6rem;transition:all 0.4s}
+.hero-cap{display:block;font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-top:0.5rem;transition:all 0.4s}
 .tool-wrap.at-top .hero-cap{font-size:10px;margin-top:2px}
 
-.tool-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.75rem;box-shadow:var(--shadow-md);transition:padding var(--transition),box-shadow var(--transition);animation:cardIn 0.5s 0.1s cubic-bezier(0.4,0,0.2,1) both}
-@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* ── Card ── */
+.tool-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.75rem;box-shadow:var(--shadow-md);transition:padding var(--transition),box-shadow var(--transition);animation:cardIn 0.4s 0.1s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .tool-wrap.at-top .tool-card{padding:1.1rem 1.25rem;box-shadow:var(--shadow-sm)}
 .tool-wrap.at-top .form-grid{gap:0.6rem}
 .tool-wrap.at-top .tool-footer{margin-top:0.875rem;padding-top:0.875rem}
 .tool-wrap.at-top .field-hint{display:none}
 .tool-wrap.at-top .field label{font-size:10px}
 
+/* ── Fields ── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
 @media(max-width:540px){.form-grid{grid-template-columns:1fr}}
 .field-full{grid-column:1/-1}
-.field{display:flex;flex-direction:column;gap:0}
+.field{display:flex;flex-direction:column}
 .field label{font-size:10.5px;font-weight:600;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;transition:color var(--transition)}
 .field:focus-within label{color:var(--accent)}
-.field input,.field select{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition);letter-spacing:-0.1px}
-.field input::placeholder{color:var(--text-3);font-style:normal;font-size:13.5px;font-weight:400}
+.field input,.field select{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition)}
+.field input::placeholder{color:var(--text-3);font-style:normal;font-size:13.5px;font-weight:400;opacity:0.7}
 .field input:hover,.field select:hover{border-color:#c4c4d0;background:var(--surface)}
 .field input:focus,.field select:focus{border-color:var(--border-focus);background:var(--surface);box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
 .field-hint{font-size:11px;color:var(--text-3);margin-top:5px;line-height:1.4}
 .optional{font-weight:400;color:var(--text-3);font-size:9.5px;letter-spacing:0;text-transform:none;margin-left:3px}
 
+/* ── Footer ── */
 .tool-footer{margin-top:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-top:1.25rem;border-top:0.5px solid var(--border)}
 .tool-note{font-size:11.5px;color:var(--text-3)}
 
+/* ── Buttons ── */
 .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;cursor:pointer;font-family:inherit;transition:all var(--transition);letter-spacing:-0.1px;border:none}
 .btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{background:var(--accent-h);box-shadow:0 4px 12px rgba(79,70,229,0.3)}
@@ -85,6 +113,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── Upload zone ── */
 .upload-zone{border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;transition:all var(--transition);background:var(--bg)}
 .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:var(--accent-soft)}
 .upload-icon{font-size:1.5rem;margin-bottom:0.4rem;display:block}
@@ -94,20 +123,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .or-divider{display:flex;align-items:center;gap:0.75rem;margin:1rem 0;color:var(--text-3);font-size:12px}
 .or-divider::before,.or-divider::after{content:'';flex:1;height:0.5px;background:var(--border)}
 
+/* ── Stream ── */
 .stream-wrap{max-width:580px;margin:1rem auto 0;width:100%;padding:0 1.5rem;display:none}
 .stream-log{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:0.875rem 1rem;display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto;box-shadow:var(--shadow-sm)}
-.stream-entry{font-size:12.5px;color:var(--text-2);display:flex;align-items:center;gap:9px;animation:entryIn 0.2s ease both}
-@keyframes entryIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
-.stream-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background 0.3s}
+.stream-entry{font-size:12.5px;color:var(--text-2);display:flex;align-items:center;gap:9px;animation:fadeIn 0.2s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-3px)}to{opacity:1;transform:none}}
+.stream-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dot-running{background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
 .dot-done{background:var(--green)}.dot-fail{background:var(--red)}.dot-warn{background:var(--amber)}.dot-info{background:var(--text-3)}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
+/* ── Results ── */
 #audit-results-outer{padding:1.75rem 1.5rem 4rem;display:none}
 .results-inner{max-width:580px;margin:0 auto}
-
-.score-hero{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow-sm);animation:fadeUp 0.4s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── Score ── */
+.score-hero{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow-sm);animation:fadeUp 0.4s ease both}
 .score-top{display:flex;align-items:center;gap:1.25rem;margin-bottom:1.25rem}
 .score-ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
 .score-ring-wrap svg{transform:rotate(-90deg)}
@@ -127,8 +159,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .tc-important{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
 .tc-pass{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
 .tc-info{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
-.tally-cell.dimmed{opacity:0.3}.tally-cell.highlighted{box-shadow:0 0 0 2px currentColor,var(--shadow-sm)}
+.tally-cell.dimmed{opacity:0.3}.tally-cell.highlighted{box-shadow:0 0 0 2px currentColor}
 
+/* ── Readiness ── */
 .readiness{border-top:0.5px solid var(--border);padding-top:1rem}
 .readiness-title{font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.7rem}
 .readiness-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -137,19 +170,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .ri-dot{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;font-weight:700}
 .ri-dot.pass{background:var(--green-bg);color:var(--green)}.ri-dot.fail{background:var(--red-bg);color:var(--red)}.ri-dot.warn{background:var(--amber-bg);color:var(--amber)}.ri-dot.info{background:var(--blue-bg);color:var(--blue)}
 
+/* ── Critical banner ── */
 .critical-banner{background:var(--red-bg);border:0.5px solid var(--red-border);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1rem;animation:fadeUp 0.4s 0.1s ease both}
 .critical-banner h3{font-size:13px;font-weight:500;color:var(--red);margin-bottom:0.5rem}
 .critical-list{list-style:none;display:flex;flex-direction:column;gap:4px}
 .critical-list li{font-size:12.5px;color:var(--red);padding-left:1rem;position:relative}
 .critical-list li::before{content:'→';position:absolute;left:0;opacity:0.6}
 
+/* ── Sections ── */
 .result-section{margin-bottom:0.875rem;scroll-margin-top:16px}
 .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;padding:0 0.25rem}
 .section-lbl{font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3)}
 .section-sum{font-size:11px;color:var(--text-3)}
 
+/* ── Cards ── */
 .cards-list{display:flex;flex-direction:column;gap:6px}
-.check-card{background:var(--surface);border-radius:var(--radius-sm);border:0.5px solid var(--border);border-left:3px solid transparent;overflow:hidden;transition:box-shadow var(--transition),transform var(--transition);animation:fadeUp 0.35s ease both}
+.check-card{background:var(--surface);border-radius:var(--radius-sm);border:0.5px solid var(--border);border-left:3px solid transparent;overflow:hidden;transition:box-shadow var(--transition),transform var(--transition);animation:fadeUp 0.3s ease both}
 .check-card:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px)}
 .check-card.card-critical{border-left-color:var(--red)}.check-card.card-important{border-left-color:var(--amber)}.check-card.card-pass{border-left-color:var(--green)}.check-card.card-info{border-left-color:#3b82f6}.check-card.card-timeout{border-left-color:var(--text-3)}
 .check-card.jumped{animation:flash 1.2s ease forwards}
@@ -168,8 +204,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .card-btn{font-size:11px;font-weight:500;padding:4px 11px;border-radius:100px;border:0.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;transition:all var(--transition);font-family:inherit}
 .card-btn:hover{border-color:#c4c4d0;color:var(--text);background:var(--bg2)}
 .card-expand{display:none;padding:0 1rem 1rem;overflow:hidden}
-.card-expand.open{display:block;animation:expandIn 0.22s cubic-bezier(0.4,0,0.2,1)}
-@keyframes expandIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.card-expand.open{display:block;animation:expandIn 0.2s ease}
+@keyframes expandIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .expand-tabs{display:flex;gap:4px;margin-bottom:0.75rem}
 .expand-tab{font-size:11px;font-weight:500;padding:4px 11px;border-radius:100px;border:0.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;transition:all var(--transition);font-family:inherit}
 .expand-tab.active{background:var(--text);color:#fff;border-color:var(--text)}
@@ -185,10 +221,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .provider-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .provider-pill{font-size:11px;padding:4px 11px;border-radius:100px;border:0.5px solid var(--border);cursor:pointer;background:transparent;color:var(--text-2);transition:all var(--transition);font-family:inherit}
 .provider-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.provider-content{display:none;margin-top:8px}.provider-content.active{display:block;animation:expandIn 0.2s ease}
+.provider-content{display:none;margin-top:8px}.provider-content.active{display:block}
 
+/* ── Header/Sim results ── */
 .hdr-results-wrap,.sim-results-wrap{max-width:580px;margin:0 auto;padding:1.5rem 1.5rem 4rem;display:none}
-.result-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:1.1rem 1.25rem;margin-bottom:0.75rem;box-shadow:var(--shadow-sm);animation:fadeUp 0.35s ease both}
+.result-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:1.1rem 1.25rem;margin-bottom:0.75rem;box-shadow:var(--shadow-sm);animation:fadeUp 0.3s ease both}
 .result-card-title{font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.75rem;display:flex;align-items:center;gap:7px}
 .hdr-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12.5px;gap:1rem}
 .hdr-row:last-child{border-bottom:none}
@@ -215,24 +252,76 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
 .sf-icon{flex-shrink:0;font-weight:700;margin-top:1px}
 .sim-finding.critical{background:var(--red-bg);color:var(--red)}.sim-finding.warn{background:var(--amber-bg);color:var(--amber)}.sim-finding.ok{background:var(--green-bg);color:var(--green)}
 
+/* ── Docs ── */
+.docs-wrap{max-width:640px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.docs-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow-sm)}
+.docs-intro{font-size:13.5px;color:var(--text-2);line-height:1.7;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:0.5px solid var(--border)}
+.docs-section{margin-bottom:1.75rem;padding-bottom:1.75rem;border-bottom:0.5px solid var(--border)}
+.docs-section:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.docs-section-title{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.875rem}
+.docs-items{display:flex;flex-direction:column;gap:8px}
+.docs-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.6}
+.docs-tag{flex-shrink:0;font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px;background:var(--bg2);color:var(--text-2);letter-spacing:0.04em;margin-top:2px;white-space:nowrap}
+.docs-tag.red{background:var(--red-bg);color:var(--red)}
+.docs-tag.amber{background:var(--amber-bg);color:var(--amber)}
+.docs-tag.green{background:var(--green-bg);color:var(--green)}
+.docs-tag.blue{background:var(--blue-bg);color:var(--blue)}
+.docs-desc{color:var(--text-2)}
+.docs-note{font-size:12px;color:var(--text-3);line-height:1.65;padding:0.875rem 1rem;background:var(--bg2);border-radius:var(--radius-xs);margin-top:1.75rem}
+
+/* ── Error ── */
 .err-box{background:var(--red-bg);border:0.5px solid var(--red-border);border-radius:var(--radius-xs);padding:0.75rem 1rem;font-size:13px;color:var(--red);margin:0.75rem auto;max-width:580px;width:calc(100% - 3rem);display:none}
 .results-note{font-size:11.5px;color:var(--text-3);line-height:1.6;padding:0.875rem 1rem;background:var(--bg2);border-radius:var(--radius-xs);margin-top:0.75rem}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 </style>
 </head>
 <body>
 
+<!-- Nav -->
 <nav class="nav">
-  <a class="nav-brand" href="#">
+  <button class="nav-brand" onclick="resetApp()">
     <div class="nav-logo"><svg viewBox="0 0 16 16"><path d="M2 4l6 4 6-4"/><rect x="2" y="3" width="12" height="10" rx="2"/></svg></div>
     <span class="nav-wordmark">Reachable</span>
-  </a>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('audit',this)">Audit</button>
-    <button class="nav-tab" onclick="switchTab('header',this)">Header Analyzer</button>
-    <button class="nav-tab" onclick="switchTab('simulator',this)">DNS Simulator</button>
+  </button>
+  <div class="nav-center">
+    <button class="nav-tab active" id="tab-audit" onclick="switchTab('audit',this)">Audit</button>
+    <button class="nav-tab" id="tab-header" onclick="switchTab('header',this)">Header Analyzer</button>
+    <button class="nav-tab" id="tab-simulator" onclick="switchTab('simulator',this)">DNS Simulator</button>
+    <button class="nav-tab" id="tab-docs" onclick="switchTab('docs',this)">Docs</button>
+  </div>
+  <div class="nav-right">
+    <button class="report-btn" onclick="document.getElementById('bugModal').classList.add('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.5 1.5"/><path d="M14.5 3.5L16 2"/><circle cx="12" cy="11" r="5"/><path d="M12 16v5"/><path d="M5 10H3"/><path d="M21 10h-2"/><path d="M5.5 18.5l1.5-1.5"/><path d="M17 17l1.5 1.5"/></svg>
+      Report
+    </button>
   </div>
 </nav>
+
+<!-- Bug modal -->
+<div class="modal-overlay" id="bugModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Share feedback</div>
+        <div class="modal-sub">Found a bug or have an idea? We read everything.</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('bugModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-options">
+      <a class="modal-option" href="https://tally.so/r/Gxq0bo" target="_blank" rel="noopener" onclick="document.getElementById('bugModal').classList.remove('open')">
+        <div class="modal-option-icon" style="background:var(--red-bg)">🐛</div>
+        <div><div class="modal-option-title">Bug report</div><div class="modal-option-sub">Something is broken or not working right</div></div>
+      </a>
+      <a class="modal-option" href="https://tally.so/r/Gxq0bo" target="_blank" rel="noopener" onclick="document.getElementById('bugModal').classList.remove('open')">
+        <div class="modal-option-icon" style="background:var(--accent-soft)">💡</div>
+        <div><div class="modal-option-title">Feature request</div><div class="modal-option-sub">Something you wish Reachable could do</div></div>
+      </a>
+      <a class="modal-option" href="https://tally.so/r/Gxq0bo" target="_blank" rel="noopener" onclick="document.getElementById('bugModal').classList.remove('open')">
+        <div class="modal-option-icon" style="background:var(--green-bg)">💬</div>
+        <div><div class="modal-option-title">General feedback</div><div class="modal-option-sub">Anything else on your mind</div></div>
+      </a>
+    </div>
+  </div>
+</div>
 
 <!-- AUDIT -->
 <div class="panel active" id="panel-audit">
@@ -302,7 +391,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
           <div class="upload-filename" id="hdrFileName"></div>
         </div>
         <div class="or-divider"><span>or paste headers below</span></div>
-        <textarea id="headerInput" rows="7" style="width:100%;font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;resize:vertical;line-height:1.65;transition:border-color var(--transition),box-shadow var(--transition)" placeholder="Paste your raw email headers here...&#10;&#10;Gmail: open email, click ⋮, Show original&#10;Outlook: File > Properties > Internet headers"></textarea>
+        <textarea id="headerInput" rows="7" style="width:100%;font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;resize:vertical;line-height:1.65;transition:border-color var(--transition),box-shadow var(--transition)" placeholder="Paste your raw email headers here...&#10;&#10;Gmail: open email, click the three dots, Show original&#10;Outlook: File, Properties, Internet headers"></textarea>
         <div class="tool-footer">
           <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
             <button class="btn btn-primary" onclick="analyzeHeaders()">Analyze headers</button>
@@ -358,23 +447,68 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
   </div>
 </div>
 
+<!-- DOCS -->
+<div class="panel" id="panel-docs">
+  <div class="tool-wrap" id="docsWrap" style="justify-content:flex-start;padding-top:2rem">
+    <div class="tool-inner" style="max-width:640px">
+      <div class="tool-hero" style="margin-bottom:1.5rem">
+        <div class="hero-wordmark">Reach<span class="accent">able</span></div>
+        <span class="hero-cap">Documentation</span>
+      </div>
+      <div class="docs-card">
+        <p class="docs-intro">Reachable checks the technical infrastructure behind your email sending. Everything runs in your browser using Cloudflare DNS. Nothing you enter is stored, tracked or logged.</p>
+
+        <div class="docs-section">
+          <div class="docs-section-title">Domain Audit</div>
+          <div class="docs-items">
+            <div class="docs-item"><span class="docs-tag">SPF</span><span class="docs-desc">Checks which servers are authorised to send email for your domain. Validates the all mechanism, lookup count against the 10-lookup limit, and flags configurations like +all.</span></div>
+            <div class="docs-item"><span class="docs-tag">DKIM</span><span class="docs-desc">Verifies your public key exists at the selector you provide. Follows CNAME chains. Estimates key size and flags weak or revoked keys.</span></div>
+            <div class="docs-item"><span class="docs-tag">DMARC</span><span class="docs-desc">Checks your policy (p=), subdomain policy (sp=), sampling rate (pct=), and whether aggregate reports are configured (rua=). Falls back to org domain if needed.</span></div>
+            <div class="docs-item"><span class="docs-tag">MX</span><span class="docs-desc">Confirms inbound mail delivery is configured for your domain.</span></div>
+            <div class="docs-item"><span class="docs-tag">BIMI</span><span class="docs-desc">Checks whether your brand logo is configured to appear in Gmail, Yahoo and Apple Mail.</span></div>
+            <div class="docs-item"><span class="docs-tag">MTA-STS</span><span class="docs-desc">Checks whether TLS is enforced for inbound email connections.</span></div>
+            <div class="docs-item"><span class="docs-tag">Blacklists</span><span class="docs-desc">Queries URIBL, SURBL and DBL Spamhaus for your domain reputation.</span></div>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">IP Checks</div>
+          <div class="docs-items">
+            <div class="docs-item"><span class="docs-tag">rDNS</span><span class="docs-desc">Looks up the PTR record for your IP and forward-confirms it resolves back to the same IP. Supports IPv4 and IPv6.</span></div>
+            <div class="docs-item"><span class="docs-tag">IP Blacklists</span><span class="docs-desc">Queries Spamhaus ZEN, Barracuda, SORBS, SpamCop and MXToolbox. Validates actual positive response codes to avoid false positives.</span></div>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">Header Analyzer</div>
+          <p style="font-size:13px;color:var(--text-2);line-height:1.7">Paste raw email headers from Gmail (three dots menu, Show original) or Outlook (File, Properties, Internet headers). Reachable decodes SPF, DKIM, DMARC and ARC results in transit, shows the routing path hop by hop, and flags spam signals.</p>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">DNS Simulator</div>
+          <p style="font-size:13px;color:var(--text-2);line-height:1.7">Paste a proposed SPF or DMARC record before publishing it. For SPF, Reachable estimates the DNS lookup count and flags dangerous configurations. For DMARC, it validates p=, pct=, rua= and sp=. No DNS changes are made.</p>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">Severity levels</div>
+          <div class="docs-items">
+            <div class="docs-item"><span class="docs-tag red">Critical</span><span class="docs-desc">Fix immediately. These are actively hurting your deliverability or leaving your domain open to spoofing.</span></div>
+            <div class="docs-item"><span class="docs-tag amber">Important</span><span class="docs-desc">Should be addressed soon. Not breaking anything today but could become a problem.</span></div>
+            <div class="docs-item"><span class="docs-tag green">Pass</span><span class="docs-desc">This check is correctly configured.</span></div>
+            <div class="docs-item"><span class="docs-tag blue">Info</span><span class="docs-desc">Optional or informational. Worth knowing about but not urgent.</span></div>
+          </div>
+        </div>
+
+        <p class="docs-note">All checks use Cloudflare DNS-over-HTTPS (cloudflare-dns.com/dns-query). Blacklist checks cover a representative sample — for comprehensive coverage also check Google Postmaster Tools and your ESP dashboard.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const DNS_TIMEOUT=5000;
-const KNOW_HOW={
-  spf:`SPF lists which servers are allowed to send email for your domain. Receiving servers check it on every message. Missing SPF means anyone can impersonate you. More than 10 DNS lookups causes a permerror — treated as a hard fail.`,
-  dkim:`DKIM signs every outbound email with a cryptographic key. The receiving server fetches your public key from DNS and verifies it wasn't tampered with. Without DKIM there's no proof an email genuinely came from you.`,
-  dmarc:`DMARC tells receiving servers what to do when SPF or DKIM fails — nothing, quarantine, or reject. It also sends you aggregate reports so you can see who's sending from your domain. Without DMARC, spoofing goes unchecked.`,
-  mx:`MX records tell other mail servers where to deliver email sent to your domain. Without them, replies bounce and your domain looks misconfigured.`,
-  rdns:`Reverse DNS (PTR) maps your sending IP to a hostname. Forward-confirmed rDNS means that hostname also resolves back to the same IP. Most receiving servers check this — a missing PTR is a classic spam signal.`,
-  blacklist:`Blocklists are real-time databases of IPs and domains flagged for spam. If listed, receiving servers may reject or bulk-folder your mail. Always fix the root cause before requesting removal.`,
-  bimi:`BIMI lets your brand logo appear in supported inboxes like Gmail, Yahoo and Apple Mail. It needs a strong DMARC policy and a DNS record pointing to your SVG logo.`,
-  tls:`MTA-STS enforces TLS encryption for inbound email, preventing downgrade attacks. Without it, connections can fall back to unencrypted.`,
-};
-const FIX_DATA={
-  spf_missing:{steps:`Add a TXT record on your domain's DNS that tells the world which servers are allowed to send on your behalf.`,record:`v=spf1 include:YOUR_ESP ~all`,providers:{'Google Workspace':{record:`v=spf1 include:_spf.google.com ~all`,note:`Replace with your actual record if you send from other services too.`},'Microsoft 365':{record:`v=spf1 include:spf.protection.outlook.com ~all`,note:`Add other includes if you send from additional platforms.`},'SendGrid':{record:`v=spf1 include:sendgrid.net ~all`,note:`SendGrid recommends using DKIM as the primary authentication method.`},'Mailgun':{record:`v=spf1 include:mailgun.org ~all`,note:``},'AWS SES':{record:`v=spf1 include:amazonses.com ~all`,note:`Only needed if not using a custom MAIL FROM domain.`},'Postmark':{record:`v=spf1 include:spf.mtasv.net ~all`,note:`Postmark also provides DKIM — use both.`}}},
-  dmarc_missing:{steps:`Add a TXT record at _dmarc.yourdomain.com. Start with p=none to monitor, then move to quarantine or reject once confident.`,record:`v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com; fo=1`,providers:{'Starter (monitoring)':{record:`v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`,note:`p=none means monitoring only. No enforcement yet.`},'Intermediate':{record:`v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@yourdomain.com`,note:`25% of failing mail goes to spam. Increase pct gradually.`},'Strict':{record:`v=DMARC1; p=reject; rua=mailto:dmarc@yourdomain.com; ruf=mailto:dmarc@yourdomain.com; fo=1`,note:`All failing mail is rejected. Only use when fully confident.`}}},
-  dkim_missing:{steps:`DKIM requires a private/public key pair. Your ESP generates this. Add the public key as a TXT record at selector._domainkey.yourdomain.com.`,record:`Contact your ESP to generate a DKIM key pair.`,providers:{'Google Workspace':{record:`Admin Console > Apps > Google Workspace > Gmail > Authenticate email`,note:`Google generates the key and gives you the exact record to publish.`},'Microsoft 365':{record:`Microsoft 365 Defender > Email & collaboration > Policies > DKIM`,note:`M365 uses CNAMEs, not TXT records.`},'SendGrid':{record:`Settings > Sender Authentication > Domain Authentication`,note:`SendGrid generates two CNAME records for your DNS.`},'Mailgun':{record:`Sending > Domains > your domain > DNS records`,note:`Mailgun gives you the exact TXT record.`}}},
-};
+const KNOW_HOW={spf:`SPF lists which servers are allowed to send email for your domain. Receiving servers check it on every message. Missing SPF means anyone can impersonate you. More than 10 DNS lookups causes a permerror — treated as a hard fail.`,dkim:`DKIM signs every outbound email with a cryptographic key. The receiving server fetches your public key from DNS and verifies it wasn't tampered with. Without DKIM there's no proof an email genuinely came from you.`,dmarc:`DMARC tells receiving servers what to do when SPF or DKIM fails — nothing, quarantine, or reject. It also sends you aggregate reports so you can see who's sending from your domain. Without DMARC, spoofing goes unchecked.`,mx:`MX records tell other mail servers where to deliver email sent to your domain. Without them, replies bounce and your domain looks misconfigured.`,rdns:`Reverse DNS (PTR) maps your sending IP to a hostname. Forward-confirmed rDNS means that hostname also resolves back to the same IP. Most receiving servers check this — a missing PTR is a classic spam signal.`,blacklist:`Blocklists are real-time databases of IPs and domains flagged for spam. If listed, receiving servers may reject or bulk-folder your mail. Always fix the root cause before requesting removal.`,bimi:`BIMI lets your brand logo appear in supported inboxes like Gmail, Yahoo and Apple Mail. It needs a strong DMARC policy and a DNS record pointing to your SVG logo.`,tls:`MTA-STS enforces TLS encryption for inbound email, preventing downgrade attacks. Without it, connections can fall back to unencrypted.`};
+const FIX_DATA={spf_missing:{steps:`Add a TXT record on your domain's DNS that tells the world which servers are allowed to send on your behalf.`,record:`v=spf1 include:YOUR_ESP ~all`,providers:{'Google Workspace':{record:`v=spf1 include:_spf.google.com ~all`,note:`Replace with your actual record if you send from other services too.`},'Microsoft 365':{record:`v=spf1 include:spf.protection.outlook.com ~all`,note:`Add other includes if you send from additional platforms.`},'SendGrid':{record:`v=spf1 include:sendgrid.net ~all`,note:`SendGrid recommends using DKIM as the primary authentication method.`},'Mailgun':{record:`v=spf1 include:mailgun.org ~all`,note:``},'AWS SES':{record:`v=spf1 include:amazonses.com ~all`,note:`Only needed if not using a custom MAIL FROM domain.`},'Postmark':{record:`v=spf1 include:spf.mtasv.net ~all`,note:`Postmark also provides DKIM — use both.`}}},dmarc_missing:{steps:`Add a TXT record at _dmarc.yourdomain.com. Start with p=none to monitor, then move to quarantine or reject once confident.`,record:`v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com; fo=1`,providers:{'Starter (monitoring)':{record:`v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`,note:`p=none means monitoring only. No enforcement yet.`},'Intermediate':{record:`v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@yourdomain.com`,note:`25% of failing mail goes to spam. Increase pct gradually.`},'Strict':{record:`v=DMARC1; p=reject; rua=mailto:dmarc@yourdomain.com; ruf=mailto:dmarc@yourdomain.com; fo=1`,note:`All failing mail is rejected. Only use when fully confident.`}}},dkim_missing:{steps:`DKIM requires a private/public key pair. Your ESP generates this. Add the public key as a TXT record at selector._domainkey.yourdomain.com.`,record:`Contact your ESP to generate a DKIM key pair.`,providers:{'Google Workspace':{record:`Admin Console > Apps > Google Workspace > Gmail > Authenticate email`,note:`Google generates the key and gives you the exact record to publish.`},'Microsoft 365':{record:`Microsoft 365 Defender > Email and collaboration > Policies > DKIM`,note:`M365 uses CNAMEs, not TXT records.`},'SendGrid':{record:`Settings > Sender Authentication > Domain Authentication`,note:`SendGrid generates two CNAME records for your DNS.`},'Mailgun':{record:`Sending > Domains > your domain > DNS records`,note:`Mailgun gives you the exact TXT record.`}}}};
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function normalizeDomain(r){r=(r||'').trim();if(!r)return '';if(r.includes('://')){try{r=new URL(r).hostname;}catch{r=r.replace(/^.*:\/\//,'').split('/')[0];}}r=r.split(':')[0].replace(/\/.*$/,'').replace(/\.$/,'').toLowerCase();try{r=new URL('http://'+r).hostname;}catch{}return r;}
@@ -386,14 +520,8 @@ function reverseIPv6(ip){return ip.split(':').map(g=>g.padStart(4,'0')).join('')
 
 async function dnsLookup(name,type){
   const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),DNS_TIMEOUT);
-  try{
-    const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,{method:'GET',mode:'cors',credentials:'omit',headers:{'Accept':'application/dns-json'},signal:ctrl.signal});
-    clearTimeout(tid);if(!r.ok)return{status:'error',errorType:'http_'+r.status,answer:[]};
-    const d=await r.json();
-    if(d.Status===2)return{status:'servfail',errorType:'SERVFAIL',answer:[]};
-    if(d.Status===3)return{status:'nxdomain',errorType:'NXDOMAIN',answer:[]};
-    return{status:'ok',errorType:null,answer:d.Answer||[]};
-  }catch(e){clearTimeout(tid);return e.name==='AbortError'?{status:'timeout',errorType:'timeout',answer:[]}:{status:'error',errorType:e.message,answer:[]};}
+  try{const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,{method:'GET',mode:'cors',credentials:'omit',headers:{'Accept':'application/dns-json'},signal:ctrl.signal});clearTimeout(tid);if(!r.ok)return{status:'error',errorType:'http_'+r.status,answer:[]};const d=await r.json();if(d.Status===2)return{status:'servfail',errorType:'SERVFAIL',answer:[]};if(d.Status===3)return{status:'nxdomain',errorType:'NXDOMAIN',answer:[]};return{status:'ok',errorType:null,answer:d.Answer||[]};}
+  catch(e){clearTimeout(tid);return e.name==='AbortError'?{status:'timeout',errorType:'timeout',answer:[]}:{status:'error',errorType:e.message,answer:[]};}
 }
 function normTXT(d){return d.replace(/"\s+"/g,'').replace(/^"|"$/g,'').trim();}
 function lookupFailed(r){return r.status==='timeout'||r.status==='error'||r.status==='servfail';}
@@ -438,13 +566,7 @@ function makeCard(name,sev,value,desc,khKey,fixKey){
     const panes=document.createElement('div');let first=true;
     const addTab=(label,content)=>{const tb=document.createElement('button');tb.className='expand-tab'+(first?' active':'');tb.textContent=label;const pane=document.createElement('div');pane.className='expand-pane'+(first?' active':'');pane.appendChild(content);tabs.appendChild(tb);panes.appendChild(pane);first=false;tb.addEventListener('click',()=>{tabs.querySelectorAll('.expand-tab').forEach(t=>t.classList.remove('active'));panes.querySelectorAll('.expand-pane').forEach(p=>p.classList.remove('active'));tb.classList.add('active');pane.classList.add('active');});};
     if(khKey){const kh=document.createElement('div');kh.className='knowhow-box';const lbl=document.createElement('div');lbl.className='knowhow-lbl';lbl.textContent='What is this?';const txt=document.createElement('p');txt.textContent=KNOW_HOW[khKey]||'';kh.appendChild(lbl);kh.appendChild(txt);addTab('Explain',kh);}
-    if(fixKey&&FIX_DATA[fixKey]){
-      const fd=FIX_DATA[fixKey];const fb=document.createElement('div');fb.className='fix-box';
-      const st=document.createElement('div');st.className='fix-step';st.textContent=fd.steps;fb.appendChild(st);
-      if(fd.record&&!fd.record.startsWith('Contact')&&!fd.record.startsWith('Admin')){const rw=document.createElement('div');rw.className='fix-record';const pre=document.createElement('pre');pre.textContent=fd.record;const cp=document.createElement('button');cp.className='copy-btn';cp.textContent='Copy';cp.onclick=()=>{navigator.clipboard.writeText(fd.record).then(()=>{cp.textContent='Copied!';setTimeout(()=>cp.textContent='Copy',2000);});};rw.appendChild(pre);rw.appendChild(cp);fb.appendChild(rw);}
-      if(fd.providers){const pl=document.createElement('div');pl.className='fix-step';pl.style.marginTop='0.75rem';const s=document.createElement('strong');s.textContent='Provider-specific:';pl.appendChild(s);fb.appendChild(pl);const pills=document.createElement('div');pills.className='provider-pills';const contents=document.createElement('div');Object.entries(fd.providers).forEach(([pn,pd])=>{const pill=document.createElement('button');pill.className='provider-pill';pill.textContent=pn;const pc=document.createElement('div');pc.className='provider-content';const pw=document.createElement('div');pw.className='fix-record';const pp=document.createElement('pre');pp.textContent=pd.record;const pcp=document.createElement('button');pcp.className='copy-btn';pcp.textContent='Copy';pcp.onclick=()=>{navigator.clipboard.writeText(pd.record).then(()=>{pcp.textContent='Copied!';setTimeout(()=>pcp.textContent='Copy',2000);});};pw.appendChild(pp);pw.appendChild(pcp);pc.appendChild(pw);if(pd.note){const n=document.createElement('div');n.style.cssText='font-size:11px;color:var(--text-3);margin-top:5px';n.textContent=pd.note;pc.appendChild(n);}pill.addEventListener('click',()=>{pills.querySelectorAll('.provider-pill').forEach(p=>p.classList.remove('active'));contents.querySelectorAll('.provider-content').forEach(c=>c.classList.remove('active'));if(pill.classList.contains('active')){pill.classList.remove('active');}else{pill.classList.add('active');pc.classList.add('active');}});pills.appendChild(pill);contents.appendChild(pc);});fb.appendChild(pills);fb.appendChild(contents);}
-      addTab('How to fix',fb);
-    }
+    if(fixKey&&FIX_DATA[fixKey]){const fd=FIX_DATA[fixKey];const fb=document.createElement('div');fb.className='fix-box';const st=document.createElement('div');st.className='fix-step';st.textContent=fd.steps;fb.appendChild(st);if(fd.record&&!fd.record.startsWith('Contact')&&!fd.record.startsWith('Admin')){const rw=document.createElement('div');rw.className='fix-record';const pre=document.createElement('pre');pre.textContent=fd.record;const cp=document.createElement('button');cp.className='copy-btn';cp.textContent='Copy';cp.onclick=()=>{navigator.clipboard.writeText(fd.record).then(()=>{cp.textContent='Copied!';setTimeout(()=>cp.textContent='Copy',2000);});};rw.appendChild(pre);rw.appendChild(cp);fb.appendChild(rw);}if(fd.providers){const pl=document.createElement('div');pl.className='fix-step';pl.style.marginTop='0.75rem';const s=document.createElement('strong');s.textContent='Provider-specific:';pl.appendChild(s);fb.appendChild(pl);const pills=document.createElement('div');pills.className='provider-pills';const contents=document.createElement('div');Object.entries(fd.providers).forEach(([pn,pd])=>{const pill=document.createElement('button');pill.className='provider-pill';pill.textContent=pn;const pc=document.createElement('div');pc.className='provider-content';const pw=document.createElement('div');pw.className='fix-record';const pp=document.createElement('pre');pp.textContent=pd.record;const pcp=document.createElement('button');pcp.className='copy-btn';pcp.textContent='Copy';pcp.onclick=()=>{navigator.clipboard.writeText(pd.record).then(()=>{pcp.textContent='Copied!';setTimeout(()=>pcp.textContent='Copy',2000);});};pw.appendChild(pp);pw.appendChild(pcp);pc.appendChild(pw);if(pd.note){const n=document.createElement('div');n.style.cssText='font-size:11px;color:var(--text-3);margin-top:5px';n.textContent=pd.note;pc.appendChild(n);}pill.addEventListener('click',()=>{pills.querySelectorAll('.provider-pill').forEach(p=>p.classList.remove('active'));contents.querySelectorAll('.provider-content').forEach(c=>c.classList.remove('active'));if(pill.classList.contains('active')){pill.classList.remove('active');}else{pill.classList.add('active');pc.classList.add('active');}});pills.appendChild(pill);contents.appendChild(pc);});fb.appendChild(pills);fb.appendChild(contents);}addTab('How to fix',fb);}
     expand.appendChild(tabs);expand.appendChild(panes);card.appendChild(expand);
     eb.addEventListener('click',()=>{const o=expand.classList.toggle('open');eb.textContent=o?'Close':'Details';});
   }
@@ -487,12 +609,29 @@ function setLoading(on){
   if(!on)setTimeout(()=>{document.getElementById('streamWrap').style.display='none';},1000);
 }
 
+function resetApp(){
+  document.getElementById('auditWrap').classList.remove('at-top');
+  document.getElementById('auditResults').innerHTML='';
+  document.getElementById('audit-results-outer').style.display='none';
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('streamLog').innerHTML='';
+  document.getElementById('domain').value='';
+  document.getElementById('dkimSel').value='';
+  document.getElementById('ip').value='';
+  document.getElementById('returnPath').value='';
+  statusGroups.length=0;activeFilter=null;
+  document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-audit').classList.add('active');
+  document.getElementById('panel-audit').style.display='flex';
+  document.getElementById('tab-audit').classList.add('active');
+}
+
 async function runAudit(){
   const runId=++currentRunId;
   document.getElementById('errBox').style.display='none';
   const resultsEl=document.getElementById('auditResults');
-  resultsEl.innerHTML='';
-  document.getElementById('audit-results-outer').style.display='none';
+  resultsEl.innerHTML='';document.getElementById('audit-results-outer').style.display='none';
   document.getElementById('streamLog').innerHTML='';
   statusGroups.length=0;activeFilter=null;
   const domain=normalizeDomain(document.getElementById('domain').value);
@@ -507,10 +646,8 @@ async function runAudit(){
   const criticals=[];const readinessChecks=[];
   function tally(sev,label){if(sev==='critical'){critCount++;if(label)criticals.push(label);}else if(sev==='important')impCount++;else if(sev==='pass')passCount++;else infoCount++;}
   const allSections=[];
-  try{
-    const[domSections,ipSection]=await Promise.all([domain?auditDomain(domain,sel,rpDomain,tally,readinessChecks):Promise.resolve([]),ip?auditIP(ip,tally,readinessChecks):Promise.resolve(null)]);
-    allSections.push(...domSections);if(ipSection)allSections.push(ipSection);
-  }catch(e){setLoading(false);const b=document.getElementById('errBox');b.textContent='Error: '+e.message;b.style.display='block';return;}
+  try{const[domSections,ipSection]=await Promise.all([domain?auditDomain(domain,sel,rpDomain,tally,readinessChecks):Promise.resolve([]),ip?auditIP(ip,tally,readinessChecks):Promise.resolve(null)]);allSections.push(...domSections);if(ipSection)allSections.push(ipSection);}
+  catch(e){setLoading(false);const b=document.getElementById('errBox');b.textContent='Error: '+e.message;b.style.display='block';return;}
   if(runId!==currentRunId){setLoading(false);return;}
   setLoading(false);
   const total=critCount+impCount+passCount;const score=total?Math.round((passCount/total)*100):0;
@@ -540,132 +677,40 @@ async function runAudit(){
   frag.appendChild(sw);
   const note=document.createElement('div');note.className='results-note';note.textContent='Checks run via Cloudflare DNS-over-HTTPS and public DNSBL lookups. Nothing is stored. Also check Google Postmaster Tools and your ESP dashboard for full coverage.';
   frag.appendChild(note);
-  resultsEl.appendChild(frag);
-  document.getElementById('audit-results-outer').style.display='block';
+  resultsEl.appendChild(frag);document.getElementById('audit-results-outer').style.display='block';
   setTimeout(()=>{const arc=document.getElementById('scoreArc');if(arc){const offset=188-Math.round((score/100)*188);arc.style.stroke=scoreColor;arc.style.strokeDashoffset=offset;}},100);
 }
 
 async function auditDomain(domain,sel,rpDomain,tally,readiness){
   const sections=[];
-  const s1=streamLog(`Checking SPF on ${domain}...`);
-  const s2=streamLog('Checking DMARC policy...');
-  const s3=streamLog(sel?`Verifying DKIM selector "${sel}"...`:'DKIM: no selector provided');
-  const s4=streamLog('Checking MX, BIMI, MTA-STS...');
-  const s5=streamLog('Querying domain blacklists...');
-  const[spfRes,dmarcRes,dmarcOrgRes,mxRes,bimiRes,mtaRes,dkimRes,rpSpfRes,domBL]=await Promise.all([
-    dnsLookup(domain,'TXT'),dnsLookup(`_dmarc.${domain}`,'TXT'),dnsLookup(`_dmarc.${orgDomain(domain)}`,'TXT'),
-    dnsLookup(domain,'MX'),dnsLookup(`default._bimi.${domain}`,'TXT'),dnsLookup(`_mta-sts.${domain}`,'TXT'),
-    sel?resolveDKIM(sel,domain):Promise.resolve(null),
-    rpDomain&&rpDomain!==domain?dnsLookup(rpDomain,'TXT'):Promise.resolve(null),
-    checkDomainBlacklists(domain),
-  ]);
+  const s1=streamLog(`Checking SPF on ${domain}...`);const s2=streamLog('Checking DMARC policy...');const s3=streamLog(sel?`Verifying DKIM selector "${sel}"...`:'DKIM: no selector provided');const s4=streamLog('Checking MX, BIMI, MTA-STS...');const s5=streamLog('Querying domain blacklists...');
+  const[spfRes,dmarcRes,dmarcOrgRes,mxRes,bimiRes,mtaRes,dkimRes,rpSpfRes,domBL]=await Promise.all([dnsLookup(domain,'TXT'),dnsLookup(`_dmarc.${domain}`,'TXT'),dnsLookup(`_dmarc.${orgDomain(domain)}`,'TXT'),dnsLookup(domain,'MX'),dnsLookup(`default._bimi.${domain}`,'TXT'),dnsLookup(`_mta-sts.${domain}`,'TXT'),sel?resolveDKIM(sel,domain):Promise.resolve(null),rpDomain&&rpDomain!==domain?dnsLookup(rpDomain,'TXT'):Promise.resolve(null),checkDomainBlacklists(domain)]);
   const authCards=[];
   if(lookupFailed(spfRes)){s1.resolve('info');authCards.push(makeCard('SPF record','timeout','',`DNS lookup failed (${spfRes.errorType}).`,'spf'));readiness.push({label:'SPF configured',status:'fail'});}
-  else{
-    const recs=spfRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=spf1'));
-    if(!recs.length){s1.resolve('fail');tally('critical','No SPF record on '+domain);authCards.push(makeCard('SPF record','critical','No record found',`No SPF TXT record for ${domain}. Any server can send as you right now.`,'spf','spf_missing'));readiness.push({label:'SPF configured',status:'fail'});}
-    else if(recs.length>1){s1.resolve('fail');tally('critical','Multiple SPF records on '+domain);authCards.push(makeCard('SPF record','critical',recs.join(' | '),'Multiple SPF records. Only one is allowed — receiving servers return a permerror.','spf'));readiness.push({label:'SPF configured',status:'warn'});}
-    else{
-      const spf=recs[0];let sev='pass',desc='SPF record found. ';
-      if(spf.includes('+all')){sev='critical';tally('critical','SPF uses +all');desc+='+all allows any server to send as you. Critical misconfiguration.';}
-      else if(spf.includes('?all')){sev='important';tally('important');desc+='?all does not reject unauthorised senders. Use ~all or -all.';}
-      else if(spf.includes('~all')){tally('pass');desc+='~all (softfail) flags unauthorised senders.';}
-      else if(spf.includes('-all')){tally('pass');desc+='-all rejects unauthorised senders. Strongest setting.';}
-      else{sev='important';tally('important');desc+='No all mechanism. SPF result is undefined for unknown senders.';}
-      s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');
-      const c=makeCard('SPF record',sev,spf,desc,'spf');authCards.push(c);
-      readiness.push({label:'SPF configured',status:sev==='pass'?'pass':sev==='critical'?'fail':'warn'});
-      countSPFLookups(domain).then(n=>{const d=c.querySelector('.card-desc');if(!d)return;if(n>10)d.textContent+=` Also: ${n} DNS lookups — exceeds the limit of 10, causing a permerror.`;else if(n>8)d.textContent+=` Approaching the 10-lookup limit (~${n} detected).`;});
-    }
-  }
-  const dmTXTs=dmarcRes.status==='ok'?dmarcRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=DMARC1')):[];
-  const orgTXTs=dmarcOrgRes.status==='ok'?dmarcOrgRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=DMARC1')):[];
-  const dmRec=dmTXTs[0]||orgTXTs[0]||null;const usedOrg=!dmTXTs.length&&orgTXTs.length>0;
-  if(lookupFailed(dmarcRes)){s2.resolve('info');authCards.push(makeCard('DMARC record','timeout','',`Lookup failed (${dmarcRes.errorType}).`,'dmarc'));readiness.push({label:'DMARC enforced',status:'fail'});}
-  else if(!dmRec){s2.resolve('fail');tally('critical','No DMARC record');authCards.push(makeCard('DMARC record','critical','No record found',`No DMARC record at _dmarc.${domain}. Spoofing is unchecked and you get no authentication reports.`,'dmarc','dmarc_missing'));readiness.push({label:'DMARC enforced',status:'fail'});}
-  else if(dmTXTs.length>1){s2.resolve('fail');tally('critical','Multiple DMARC records');authCards.push(makeCard('DMARC record','critical','Multiple records','Only one DMARC record allowed. Receivers may ignore both.','dmarc'));readiness.push({label:'DMARC enforced',status:'warn'});}
-  else{
-    const p=(dmRec.match(/\bp=(\w+)/)||[])[1]||'none';const sp=(dmRec.match(/\bsp=(\w+)/)||[])[1];const pct=(dmRec.match(/\bpct=(\d+)/)||[])[1];const rua=dmRec.includes('rua=');const fo=(dmRec.match(/\bfo=([^;]+)/)||[])[1];
-    const sev=p==='reject'||p==='quarantine'?'pass':'important';let desc=`Policy: p=${p}. `;
-    if(p==='none')desc+='Monitoring only. Failing emails still reach inboxes.';else if(p==='quarantine')desc+='Failing emails go to spam.';else desc+='Strictest setting.';
-    if(sp)desc+=` Subdomain policy: sp=${sp}.`;if(pct&&pct!=='100')desc+=` Only ${pct}% subject to policy.`;if(!rua)desc+=` No rua= — you will not receive authentication reports.`;if(fo)desc+=` fo=${fo}.`;if(usedOrg)desc+=` (Inherited from org domain.)`;
-    tally(sev);s2.resolve(sev==='pass'?'done':'warn');
-    authCards.push(makeCard('DMARC record',sev,dmRec,desc,'dmarc'));
-    readiness.push({label:'DMARC enforced',status:p==='reject'||p==='quarantine'?'pass':'warn'});
-  }
-  if(!sel){s3.resolve('info');authCards.push(makeCard('DKIM record','info','No selector provided','Enter your DKIM selector above to check this.','dkim'));readiness.push({label:'DKIM signed',status:'info'});}
-  else if(!dkimRes||lookupFailed(dkimRes)){s3.resolve('info');authCards.push(makeCard('DKIM record','timeout',`${sel}._domainkey.${domain}`,`Lookup failed.`,'dkim'));readiness.push({label:'DKIM signed',status:'fail'});}
-  else{
-    const dkRecs=dkimRes.answer.map(a=>normTXT(a.data)).filter(d=>d.includes('p='));
-    if(!dkRecs.length){s3.resolve('fail');tally('critical',`No DKIM record for selector "${sel}"`);authCards.push(makeCard('DKIM record','critical',`${sel}._domainkey.${domain}`,'No DKIM record found.','dkim','dkim_missing'));readiness.push({label:'DKIM signed',status:'fail'});}
-    else{
-      const dk=dkRecs[0];const pm=dk.match(/\bp=([A-Za-z0-9+/=]+)/);const revoked=!pm||!pm[1];
-      let keyBits='unknown';if(pm&&pm[1]){const b=Math.floor(pm[1].length*3/4);keyBits=b>=350?'2048-bit':b>=128?'1024-bit':'<1024-bit (weak)';}
-      const sev=revoked?'critical':'pass';
-      const desc=revoked?'Key is empty or revoked. DKIM signing is disabled.':`Public key found. Estimated size: ${keyBits}.${keyBits.includes('1024')||keyBits.includes('<')?' Consider upgrading to 2048-bit.':''}`;
-      tally(sev);s3.resolve(sev==='pass'?'done':'fail');
-      authCards.push(makeCard('DKIM record',sev,`${sel}._domainkey.${domain}`,desc,'dkim'));
-      readiness.push({label:'DKIM signed',status:sev});
-    }
-  }
-  s4.resolve('done');
-  sections.push({title:'Email authentication',cards:authCards});
-  const dnsCards=[];
-  if(!lookupFailed(mxRes)){const mx=mxRes.answer.filter(a=>a.type===15);if(!mx.length){tally('important');dnsCards.push(makeCard('MX records','important','No MX records','No MX records found. Replies bounce and your domain looks misconfigured.','mx'));}else{tally('pass');dnsCards.push(makeCard('MX records','pass',mx.sort((a,b)=>parseInt(a.data)-parseInt(b.data)).map(r=>r.data).join(', '),`${mx.length} MX record(s) found.`,'mx'));}}
-  const bimiRec=bimiRes.status==='ok'?bimiRes.answer.map(a=>normTXT(a.data)).find(d=>d.includes('v=BIMI1')):null;
-  if(bimiRec){tally('pass');dnsCards.push(makeCard('BIMI','pass',bimiRec,'BIMI configured. Logo can appear in Gmail, Yahoo and Apple Mail.','bimi'));readiness.push({label:'BIMI configured',status:'pass'});}
-  else{dnsCards.push(makeCard('BIMI','info','Not configured','No BIMI record. Requires a strong DMARC policy first.','bimi'));readiness.push({label:'BIMI configured',status:'info'});}
-  const mtaRec=mtaRes.status==='ok'?mtaRes.answer.map(a=>normTXT(a.data)).find(d=>d.includes('v=STSv1')):null;
-  if(mtaRec){tally('pass');dnsCards.push(makeCard('MTA-STS','pass',mtaRec,'MTA-STS enforces TLS for inbound email.','tls'));readiness.push({label:'TLS enforced',status:'pass'});}
-  else{dnsCards.push(makeCard('MTA-STS','info','Not configured','No MTA-STS policy found.','tls'));readiness.push({label:'TLS enforced',status:'info'});}
+  else{const recs=spfRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=spf1'));if(!recs.length){s1.resolve('fail');tally('critical','No SPF record on '+domain);authCards.push(makeCard('SPF record','critical','No record found',`No SPF TXT record for ${domain}. Any server can send as you right now.`,'spf','spf_missing'));readiness.push({label:'SPF configured',status:'fail'});}else if(recs.length>1){s1.resolve('fail');tally('critical','Multiple SPF records on '+domain);authCards.push(makeCard('SPF record','critical',recs.join(' | '),'Multiple SPF records. Only one is allowed.','spf'));readiness.push({label:'SPF configured',status:'warn'});}else{const spf=recs[0];let sev='pass',desc='SPF record found. ';if(spf.includes('+all')){sev='critical';tally('critical','SPF uses +all');desc+='+all allows any server to send as you. Critical misconfiguration.';}else if(spf.includes('?all')){sev='important';tally('important');desc+='?all does not reject unauthorised senders. Use ~all or -all.';}else if(spf.includes('~all')){tally('pass');desc+='~all (softfail) flags unauthorised senders.';}else if(spf.includes('-all')){tally('pass');desc+='-all rejects unauthorised senders. Strongest setting.';}else{sev='important';tally('important');desc+='No all mechanism. SPF result is undefined for unknown senders.';}s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');const c=makeCard('SPF record',sev,spf,desc,'spf');authCards.push(c);readiness.push({label:'SPF configured',status:sev==='pass'?'pass':sev==='critical'?'fail':'warn'});countSPFLookups(domain).then(n=>{const d=c.querySelector('.card-desc');if(!d)return;if(n>10)d.textContent+=` Also: ${n} DNS lookups — exceeds the limit of 10.`;else if(n>8)d.textContent+=` Approaching the 10-lookup limit (~${n} detected).`;});}}
+  const dmTXTs=dmarcRes.status==='ok'?dmarcRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=DMARC1')):[];const orgTXTs=dmarcOrgRes.status==='ok'?dmarcOrgRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=DMARC1')):[];const dmRec=dmTXTs[0]||orgTXTs[0]||null;const usedOrg=!dmTXTs.length&&orgTXTs.length>0;
+  if(lookupFailed(dmarcRes)){s2.resolve('info');authCards.push(makeCard('DMARC record','timeout','',`Lookup failed (${dmarcRes.errorType}).`,'dmarc'));readiness.push({label:'DMARC enforced',status:'fail'});}else if(!dmRec){s2.resolve('fail');tally('critical','No DMARC record');authCards.push(makeCard('DMARC record','critical','No record found',`No DMARC record at _dmarc.${domain}. Spoofing is unchecked.`,'dmarc','dmarc_missing'));readiness.push({label:'DMARC enforced',status:'fail'});}else if(dmTXTs.length>1){s2.resolve('fail');tally('critical','Multiple DMARC records');authCards.push(makeCard('DMARC record','critical','Multiple records','Only one DMARC record allowed.','dmarc'));readiness.push({label:'DMARC enforced',status:'warn'});}else{const p=(dmRec.match(/\bp=(\w+)/)||[])[1]||'none';const sp=(dmRec.match(/\bsp=(\w+)/)||[])[1];const pct=(dmRec.match(/\bpct=(\d+)/)||[])[1];const rua=dmRec.includes('rua=');const fo=(dmRec.match(/\bfo=([^;]+)/)||[])[1];const sev=p==='reject'||p==='quarantine'?'pass':'important';let desc=`Policy: p=${p}. `;if(p==='none')desc+='Monitoring only.';else if(p==='quarantine')desc+='Failing emails go to spam.';else desc+='Strictest setting.';if(sp)desc+=` sp=${sp}.`;if(pct&&pct!=='100')desc+=` Only ${pct}% subject to policy.`;if(!rua)desc+=` No rua= — you will not receive authentication reports.`;if(fo)desc+=` fo=${fo}.`;if(usedOrg)desc+=` (Inherited from org domain.)`;tally(sev);s2.resolve(sev==='pass'?'done':'warn');authCards.push(makeCard('DMARC record',sev,dmRec,desc,'dmarc'));readiness.push({label:'DMARC enforced',status:p==='reject'||p==='quarantine'?'pass':'warn'});}
+  if(!sel){s3.resolve('info');authCards.push(makeCard('DKIM record','info','No selector provided','Enter your DKIM selector above to check this.','dkim'));readiness.push({label:'DKIM signed',status:'info'});}else if(!dkimRes||lookupFailed(dkimRes)){s3.resolve('info');authCards.push(makeCard('DKIM record','timeout',`${sel}._domainkey.${domain}`,`Lookup failed.`,'dkim'));readiness.push({label:'DKIM signed',status:'fail'});}else{const dkRecs=dkimRes.answer.map(a=>normTXT(a.data)).filter(d=>d.includes('p='));if(!dkRecs.length){s3.resolve('fail');tally('critical',`No DKIM record for selector "${sel}"`);authCards.push(makeCard('DKIM record','critical',`${sel}._domainkey.${domain}`,'No DKIM record found.','dkim','dkim_missing'));readiness.push({label:'DKIM signed',status:'fail'});}else{const dk=dkRecs[0];const pm=dk.match(/\bp=([A-Za-z0-9+/=]+)/);const revoked=!pm||!pm[1];let keyBits='unknown';if(pm&&pm[1]){const b=Math.floor(pm[1].length*3/4);keyBits=b>=350?'2048-bit':b>=128?'1024-bit':'<1024-bit (weak)';}const sev=revoked?'critical':'pass';const desc=revoked?'Key is empty or revoked. DKIM signing is disabled.':`Public key found. Estimated size: ${keyBits}.${keyBits.includes('1024')||keyBits.includes('<')?' Consider upgrading to 2048-bit.':''}`;tally(sev);s3.resolve(sev==='pass'?'done':'fail');authCards.push(makeCard('DKIM record',sev,`${sel}._domainkey.${domain}`,desc,'dkim'));readiness.push({label:'DKIM signed',status:sev});}}
+  s4.resolve('done');sections.push({title:'Email authentication',cards:authCards});
+  const dnsCards=[];if(!lookupFailed(mxRes)){const mx=mxRes.answer.filter(a=>a.type===15);if(!mx.length){tally('important');dnsCards.push(makeCard('MX records','important','No MX records','No MX records found. Replies bounce and your domain looks misconfigured.','mx'));}else{tally('pass');dnsCards.push(makeCard('MX records','pass',mx.sort((a,b)=>parseInt(a.data)-parseInt(b.data)).map(r=>r.data).join(', '),`${mx.length} MX record(s) found.`,'mx'));}}
+  const bimiRec=bimiRes.status==='ok'?bimiRes.answer.map(a=>normTXT(a.data)).find(d=>d.includes('v=BIMI1')):null;if(bimiRec){tally('pass');dnsCards.push(makeCard('BIMI','pass',bimiRec,'BIMI configured. Logo can appear in Gmail, Yahoo and Apple Mail.','bimi'));readiness.push({label:'BIMI configured',status:'pass'});}else{dnsCards.push(makeCard('BIMI','info','Not configured','No BIMI record. Requires a strong DMARC policy first.','bimi'));readiness.push({label:'BIMI configured',status:'info'});}
+  const mtaRec=mtaRes.status==='ok'?mtaRes.answer.map(a=>normTXT(a.data)).find(d=>d.includes('v=STSv1')):null;if(mtaRec){tally('pass');dnsCards.push(makeCard('MTA-STS','pass',mtaRec,'MTA-STS enforces TLS for inbound email.','tls'));readiness.push({label:'TLS enforced',status:'pass'});}else{dnsCards.push(makeCard('MTA-STS','info','Not configured','No MTA-STS policy found.','tls'));readiness.push({label:'TLS enforced',status:'info'});}
   sections.push({title:'DNS infrastructure',cards:dnsCards});
-  if(rpDomain&&rpDomain!==domain&&rpSpfRes){
-    const rpCards=[];
-    if(lookupFailed(rpSpfRes)){rpCards.push(makeCard('Return-path SPF','timeout','',`Lookup failed for ${rpDomain}.`,'spf'));}
-    else{const rp=rpSpfRes.answer.map(a=>normTXT(a.data)).find(d=>d.startsWith('v=spf1'));if(!rp){tally('important');rpCards.push(makeCard('Return-path SPF','important','No SPF on bounce domain',`${rpDomain} has no SPF. SPF alignment via envelope sender will fail.`,'spf'));}else{tally('pass');rpCards.push(makeCard('Return-path SPF','pass',rp,`SPF found on ${rpDomain}.`,'spf'));}}
-    sections.push({title:'Return-path / bounce domain',cards:rpCards});
-  }
-  s5.resolve('done');
-  const domBLCards=[];
-  domBL.forEach(r=>{
-    if(r.result==='timeout'){domBLCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}
-    else if(r.result==='listed'){tally('critical',`Domain listed on ${r.name}`);domBLCards.push(makeCard(r.name,'critical','',`${domain} is listed on ${r.name}. Fix the root cause before requesting removal.`,'blacklist'));}
-    else{tally('pass');domBLCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}
-  });
-  sections.push({title:'Domain blacklists',cards:domBLCards});
-  return sections;
+  if(rpDomain&&rpDomain!==domain&&rpSpfRes){const rpCards=[];if(lookupFailed(rpSpfRes)){rpCards.push(makeCard('Return-path SPF','timeout','',`Lookup failed for ${rpDomain}.`,'spf'));}else{const rp=rpSpfRes.answer.map(a=>normTXT(a.data)).find(d=>d.startsWith('v=spf1'));if(!rp){tally('important');rpCards.push(makeCard('Return-path SPF','important','No SPF on bounce domain',`${rpDomain} has no SPF. SPF alignment via envelope sender will fail.`,'spf'));}else{tally('pass');rpCards.push(makeCard('Return-path SPF','pass',rp,`SPF found on ${rpDomain}.`,'spf'));}}sections.push({title:'Return-path / bounce domain',cards:rpCards});}
+  s5.resolve('done');const domBLCards=[];domBL.forEach(r=>{if(r.result==='timeout'){domBLCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}else if(r.result==='listed'){tally('critical',`Domain listed on ${r.name}`);domBLCards.push(makeCard(r.name,'critical','',`${domain} is listed on ${r.name}. Fix the root cause before requesting removal.`,'blacklist'));}else{tally('pass');domBLCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}});
+  sections.push({title:'Domain blacklists',cards:domBLCards});return sections;
 }
 
 async function auditIP(ip,tally,readiness){
-  const ipCards=[];
-  const s1=streamLog(`Checking reverse DNS for ${ip}...`);
-  const s2=streamLog('Querying IP blacklists...');
+  const ipCards=[];const s1=streamLog(`Checking reverse DNS for ${ip}...`);const s2=streamLog('Querying IP blacklists...');
   const ptrZone=isIPv6(ip)?`${reverseIPv6(ip)}.ip6.arpa`:`${reverseIPv4(ip)}.in-addr.arpa`;
   const[ptrRes,blRes]=await Promise.all([dnsLookup(ptrZone,'PTR'),checkIPBlacklists(ip)]);
-  if(lookupFailed(ptrRes)){s1.resolve('info');ipCards.push(makeCard('Reverse DNS (PTR)','timeout',ptrZone,'Lookup timed out.','rdns'));}
-  else{
-    const ptrs=ptrRes.answer.filter(a=>a.type===12);
-    if(!ptrs.length){s1.resolve('fail');tally('critical',`No PTR record for ${ip}`);ipCards.push(makeCard('Reverse DNS (PTR)','critical',ptrZone,`No PTR for ${ip}. Missing rDNS is a strong spam signal.`,'rdns'));readiness.push({label:'rDNS configured',status:'fail'});}
-    else{
-      const confirms=await Promise.all(ptrs.map(async p=>({hostname:p.data.replace(/\.$/,''),confirmed:await forwardConfirm(p.data.replace(/\.$/,''),ip)})));
-      const all=confirms.every(r=>r.confirmed);const any=confirms.some(r=>r.confirmed);const sev=all?'pass':any?'important':'critical';
-      const val=confirms.map(r=>`${r.hostname} (${r.confirmed?'forward-confirmed':'not confirmed'})`).join(', ');
-      const desc=all?'PTR found and forward-confirmed.':any?`PTR found but not all hostnames forward-confirm back to ${ip}.`:`PTR exists but does not forward-confirm.`;
-      tally(sev);s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');
-      ipCards.push(makeCard('Reverse DNS (PTR)',sev,val,desc,'rdns'));
-      readiness.push({label:'rDNS configured',status:sev==='pass'?'pass':'fail'});
-    }
-  }
-  s2.resolve('done');
-  blRes.forEach(r=>{
-    if(r.result==='timeout'){ipCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}
-    else if(r.result==='listed'){tally('critical',`IP listed on ${r.name}`);ipCards.push(makeCard(r.name,'critical',r.code||'',`${ip} is listed on ${r.name}.`,'blacklist'));}
-    else{tally('pass');ipCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}
-  });
+  if(lookupFailed(ptrRes)){s1.resolve('info');ipCards.push(makeCard('Reverse DNS (PTR)','timeout',ptrZone,'Lookup timed out.','rdns'));}else{const ptrs=ptrRes.answer.filter(a=>a.type===12);if(!ptrs.length){s1.resolve('fail');tally('critical',`No PTR record for ${ip}`);ipCards.push(makeCard('Reverse DNS (PTR)','critical',ptrZone,`No PTR for ${ip}. Missing rDNS is a strong spam signal.`,'rdns'));readiness.push({label:'rDNS configured',status:'fail'});}else{const confirms=await Promise.all(ptrs.map(async p=>({hostname:p.data.replace(/\.$/,''),confirmed:await forwardConfirm(p.data.replace(/\.$/,''),ip)})));const all=confirms.every(r=>r.confirmed);const any=confirms.some(r=>r.confirmed);const sev=all?'pass':any?'important':'critical';const val=confirms.map(r=>`${r.hostname} (${r.confirmed?'forward-confirmed':'not confirmed'})`).join(', ');const desc=all?'PTR found and forward-confirmed.':any?`PTR found but not all hostnames forward-confirm back to ${ip}.`:`PTR exists but does not forward-confirm.`;tally(sev);s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');ipCards.push(makeCard('Reverse DNS (PTR)',sev,val,desc,'rdns'));readiness.push({label:'rDNS configured',status:sev==='pass'?'pass':'fail'});}}
+  s2.resolve('done');blRes.forEach(r=>{if(r.result==='timeout'){ipCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}else if(r.result==='listed'){tally('critical',`IP listed on ${r.name}`);ipCards.push(makeCard(r.name,'critical',r.code||'',`${ip} is listed on ${r.name}.`,'blacklist'));}else{tally('pass');ipCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}});
   return{title:`IP checks (${ip})`,cards:ipCards};
 }
 
-// Header analyzer — setup on first tab visit
+// Header analyzer
 let hdrSetup=false;
 function setupHeaderAnalyzer(){
   if(hdrSetup)return;hdrSetup=true;
@@ -701,7 +746,7 @@ function analyzeHeaders(){
   const received=getAll('Received');
   if(received.length){const routeRows=received.slice().reverse().map((r,i)=>{const step=document.createElement('div');step.className='route-step';const num=document.createElement('div');num.className='route-num';num.textContent=i+1;const txt=document.createElement('span');txt.textContent=r.replace(/\s+/g,' ').slice(0,140)+(r.length>140?'…':'');step.appendChild(num);step.appendChild(txt);return step;});frag.appendChild(mkCard(`Routing Path (${received.length} hops)`,'🛤',routeRows));}
   const signals=[];const xSpam=get('X-Spam-Status')||get('X-Spam-Flag');if(xSpam)signals.push({icon:xSpam.toLowerCase().includes('yes')?'⚠':'✓',text:'Spam flag: '+xSpam});const xScore=get('X-Spam-Score');if(xScore)signals.push({icon:parseFloat(xScore)>5?'⚠':'✓',text:'Spam score: '+xScore});const prec=get('Precedence');if(prec)signals.push({icon:'ℹ',text:'Precedence: '+prec});if(get('List-Id')||get('List-Unsubscribe'))signals.push({icon:'ℹ',text:'Bulk/list sender detected'});if(!spfR||spfR.toLowerCase()!=='pass')signals.push({icon:'⚠',text:'SPF did not pass in transit'});if(!dkimR||dkimR.toLowerCase()!=='pass')signals.push({icon:'⚠',text:'DKIM did not pass in transit'});if(!dmarcR||dmarcR.toLowerCase()!=='pass')signals.push({icon:'⚠',text:'DMARC did not pass in transit'});
-  if(signals.length){const sigRows=signals.map(s=>{const row=document.createElement('div');row.className='signal-row';const icon=document.createElement('span');icon.className='signal-icon';icon.textContent=s.icon;const txt=document.createElement('span');txt.textContent=s.text;row.appendChild(icon);row.appendChild(txt);return row;});frag.appendChild(mkCard('Signals & Flags','🚩',sigRows));}
+  if(signals.length){const sigRows=signals.map(s=>{const row=document.createElement('div');row.className='signal-row';const icon=document.createElement('span');icon.className='signal-icon';icon.textContent=s.icon;const txt=document.createElement('span');txt.textContent=s.text;row.appendChild(icon);row.appendChild(txt);return row;});frag.appendChild(mkCard('Signals and Flags','🚩',sigRows));}
   out.appendChild(frag);wrap.style.display='block';
 }
 
@@ -713,36 +758,22 @@ function runSimulator(){
   if(type==='spf'){
     if(!record.startsWith('v=spf1'))findings.push({cls:'critical',msg:'Record does not start with v=spf1. Not a valid SPF record.'});
     const tokens=record.split(/\s+/);const n=tokens.filter(t=>/^[+-~?]?(include:|a:|mx:|ptr:|exists:)/.test(t)).length;const hasAll=tokens.find(t=>/^[+-~?]?all$/.test(t))||'';
-    rows.push({k:'Estimated DNS lookups',v:`${n} of 10 allowed`,cls:n>10?'bad':n>8?'warn':'good'});
-    rows.push({k:'All mechanism',v:hasAll||'missing',cls:hasAll?(/^[-~]all$/.test(hasAll)?'good':'warn'):'bad'});
-    rows.push({k:'Include count',v:tokens.filter(t=>t.startsWith('include:')).length+' found',cls:'good'});
-    if(n>10)findings.push({cls:'critical',msg:`${n} DNS lookups exceed the 10-lookup limit. This causes a permerror.`});
-    else if(n>8)findings.push({cls:'warn',msg:`${n} lookups is close to the limit. Adding more includes could push you over.`});
-    if(!hasAll)findings.push({cls:'critical',msg:'No all mechanism. SPF result is undefined for unknown senders.'});
-    if(hasAll==='+all')findings.push({cls:'critical',msg:'+all permits any server to send as you. Remove immediately.'});
-    if(hasAll==='?all')findings.push({cls:'warn',msg:'?all is neutral. Use ~all or -all.'});
+    rows.push({k:'Estimated DNS lookups',v:`${n} of 10 allowed`,cls:n>10?'bad':n>8?'warn':'good'});rows.push({k:'All mechanism',v:hasAll||'missing',cls:hasAll?(/^[-~]all$/.test(hasAll)?'good':'warn'):'bad'});rows.push({k:'Include count',v:tokens.filter(t=>t.startsWith('include:')).length+' found',cls:'good'});
+    if(n>10)findings.push({cls:'critical',msg:`${n} DNS lookups exceed the 10-lookup limit. This causes a permerror.`});else if(n>8)findings.push({cls:'warn',msg:`${n} lookups is close to the limit.`});
+    if(!hasAll)findings.push({cls:'critical',msg:'No all mechanism. SPF result is undefined for unknown senders.'});if(hasAll==='+all')findings.push({cls:'critical',msg:'+all permits any server to send as you. Remove immediately.'});if(hasAll==='?all')findings.push({cls:'warn',msg:'?all is neutral. Use ~all or -all.'});
     if(!findings.length)findings.push({cls:'ok',msg:'This SPF record looks safe to publish.'});
   }else{
     if(!record.startsWith('v=DMARC1'))findings.push({cls:'critical',msg:'Record does not start with v=DMARC1. Not a valid DMARC record.'});
     const p=(record.match(/\bp=(\w+)/)||[])[1];const sp=(record.match(/\bsp=(\w+)/)||[])[1];const pct=(record.match(/\bpct=(\d+)/)||[])[1];const rua=record.includes('rua=');const ruf=record.includes('ruf=');
-    rows.push({k:'Policy (p=)',v:p||'missing',cls:p==='reject'||p==='quarantine'?'good':p==='none'?'warn':'bad'});
-    rows.push({k:'Subdomain policy (sp=)',v:sp||'inherits from p=',cls:'good'});
-    rows.push({k:'Percentage (pct=)',v:pct?pct+'%':'100% (default)',cls:pct&&parseInt(pct)<100?'warn':'good'});
-    rows.push({k:'Aggregate reports (rua=)',v:rua?'configured':'missing',cls:rua?'good':'warn'});
-    rows.push({k:'Forensic reports (ruf=)',v:ruf?'configured':'not set',cls:'good'});
-    if(!p)findings.push({cls:'critical',msg:'No p= tag. Not a valid DMARC record.'});
-    else if(p==='none')findings.push({cls:'warn',msg:'p=none means monitoring only. Failing emails still reach inboxes.'});
-    if(!rua)findings.push({cls:'warn',msg:'No rua= tag. You will not receive DMARC aggregate reports.'});
-    if(pct&&parseInt(pct)<100)findings.push({cls:'warn',msg:`pct=${pct} means only ${pct}% of failing mail is subject to your policy.`});
+    rows.push({k:'Policy (p=)',v:p||'missing',cls:p==='reject'||p==='quarantine'?'good':p==='none'?'warn':'bad'});rows.push({k:'Subdomain policy (sp=)',v:sp||'inherits from p=',cls:'good'});rows.push({k:'Percentage (pct=)',v:pct?pct+'%':'100% (default)',cls:pct&&parseInt(pct)<100?'warn':'good'});rows.push({k:'Aggregate reports (rua=)',v:rua?'configured':'missing',cls:rua?'good':'warn'});rows.push({k:'Forensic reports (ruf=)',v:ruf?'configured':'not set',cls:'good'});
+    if(!p)findings.push({cls:'critical',msg:'No p= tag. Not a valid DMARC record.'});else if(p==='none')findings.push({cls:'warn',msg:'p=none means monitoring only. Failing emails still reach inboxes.'});if(!rua)findings.push({cls:'warn',msg:'No rua= tag. You will not receive DMARC aggregate reports.'});if(pct&&parseInt(pct)<100)findings.push({cls:'warn',msg:`pct=${pct} means only ${pct}% of failing mail is subject to your policy.`});
     if(!findings.length)findings.push({cls:'ok',msg:'This DMARC record looks reasonable.'});
   }
   const frag=document.createDocumentFragment();
   const rc=document.createElement('div');rc.className='result-card';
-  rows.forEach(r=>{const row=document.createElement('div');row.className='sim-row';const k=document.createElement('span');k.className='sim-key';k.textContent=r.k;const v=document.createElement('span');v.className=`sim-val ${r.cls||''}`;v.textContent=r.v;row.appendChild(k);row.appendChild(v);rc.appendChild(row);});
-  frag.appendChild(rc);
+  rows.forEach(r=>{const row=document.createElement('div');row.className='sim-row';const k=document.createElement('span');k.className='sim-key';k.textContent=r.k;const v=document.createElement('span');v.className=`sim-val ${r.cls||''}`;v.textContent=r.v;row.appendChild(k);row.appendChild(v);rc.appendChild(row);});frag.appendChild(rc);
   const fc=document.createElement('div');fc.className='result-card';const ft=document.createElement('div');ft.className='result-card-title';ft.innerHTML='<span>🔍</span>Findings';fc.appendChild(ft);
-  const fl=document.createElement('div');fl.className='sim-findings';findings.forEach(f=>{const item=document.createElement('div');item.className=`sim-finding ${f.cls}`;const icon=document.createElement('span');icon.className='sf-icon';icon.textContent=f.cls==='critical'?'✕':f.cls==='warn'?'!':'✓';const txt=document.createElement('span');txt.textContent=f.msg;item.appendChild(icon);item.appendChild(txt);fl.appendChild(item);});
-  fc.appendChild(fl);frag.appendChild(fc);
+  const fl=document.createElement('div');fl.className='sim-findings';findings.forEach(f=>{const item=document.createElement('div');item.className=`sim-finding ${f.cls}`;const icon=document.createElement('span');icon.className='sf-icon';icon.textContent=f.cls==='critical'?'✕':f.cls==='warn'?'!':'✓';const txt=document.createElement('span');txt.textContent=f.msg;item.appendChild(icon);item.appendChild(txt);fl.appendChild(item);});fc.appendChild(fl);frag.appendChild(fc);
   out.appendChild(frag);wrap.style.display='block';
 }
 
@@ -750,10 +781,12 @@ function switchTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   const target=document.getElementById('panel-'+name);
-  target.classList.add('active');target.style.display='flex';
+  if(target){target.classList.add('active');target.style.display='flex';}
   btn.classList.add('active');
   if(name==='header')setupHeaderAnalyzer();
 }
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('bugModal').classList.remove('open');}});
 </script>
 </body>
 </html>
