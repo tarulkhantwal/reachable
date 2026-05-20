@@ -29,6 +29,7 @@
 const DNS_TIMEOUT=6000;
 const DNS_RETRIES=2;
 const DNS_RETRY_DELAY=400;
+//this is a test
 
 // CHANGE THIS to your deployed Worker URL once you've run `wrangler deploy`
 // e.g. 'https://api.reachable.info' or 'https://reachable-dns.<your-account>.workers.dev'
