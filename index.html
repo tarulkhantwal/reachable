@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reachable</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234F46E5'/><path d='M7 11l9 6 9-6' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/><rect x='7' y='9' width='18' height='14' rx='3' stroke='white' stroke-width='2' fill='none'/></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <button class="nav-brand" onclick="resetApp()">
+    <div class="nav-logo"><svg viewBox="0 0 16 16"><path d="M2 4l6 4 6-4"/><rect x="2" y="3" width="12" height="10" rx="2"/></svg></div>
+    <span class="nav-wordmark">Reachable</span>
+  </button>
+  <div class="nav-center">
+    <button class="nav-tab active" id="tab-audit" onclick="switchTab('audit',this)">Audit</button>
+    <button class="nav-tab" id="tab-header" onclick="switchTab('header',this)">Header Analyzer</button>
+    <button class="nav-tab" id="tab-simulator" onclick="switchTab('simulator',this)">DNS Simulator</button>
+    <button class="nav-tab" id="tab-docs" onclick="switchTab('docs',this)">Docs</button>
+  </div>
+  <div class="nav-right">
+    <button class="report-btn" onclick="document.getElementById('bugModal').classList.add('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.5 1.5"/><path d="M14.5 3.5L16 2"/><circle cx="12" cy="11" r="5"/><path d="M12 16v5"/><path d="M5 10H3"/><path d="M21 10h-2"/><path d="M5.5 18.5l1.5-1.5"/><path d="M17 17l1.5 1.5"/></svg>
+      Report
+    </button>
+  </div>
+</nav>
+
+<!-- Bug modal -->
+<div class="modal-overlay" id="bugModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Share feedback</div>
+        <div class="modal-sub">Found a bug or have an idea? We read everything.</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('bugModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-options">
+      <a class="modal-option" href="https://tally.so/r/Gxq0bo" target="_blank" rel="noopener" onclick="document.getElementById('bugModal').classList.remove('open')">
+        <div class="modal-option-icon" style="background:var(--red-bg)">🐛</div>
+        <div><div class="modal-option-title">Bug report</div><div class="modal-option-sub">Something is broken or not working right</div></div>
+      </a>
+      <a class="modal-option" href="https://tally.so/r/Gxq0bo" target="_blank" rel="noopener" onclick="document.getElementById('bugModal').classList.remove('open')">
+        <div class="modal-option-icon" style="background:var(--accent-soft)">💡</div>
+        <div><div class="modal-option-title">Feature request</div><div class="modal-option-sub">Something you wish Reachable could do</div></div>
+      </a>
+      <a class="modal-option" href="https://tally.so/r/Gxq0bo" target="_blank" rel="noopener" onclick="document.getElementById('bugModal').classList.remove('open')">
+        <div class="modal-option-icon" style="background:var(--green-bg)">💬</div>
+        <div><div class="modal-option-title">General feedback</div><div class="modal-option-sub">Anything else on your mind</div></div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT -->
+<div class="panel active" id="panel-audit">
+  <div class="tool-wrap" id="auditWrap">
+    <div class="tool-inner">
+      <div class="tool-hero">
+        <div class="hero-wordmark">Reach<span class="accent">able</span></div>
+        <span class="hero-cap">Domain Audit</span>
+      </div>
+      <div class="tool-card">
+        <div class="form-grid">
+          <div class="field">
+            <label for="domain">Sending domain</label>
+            <input type="text" id="domain" placeholder="yourcompany.com" autocomplete="off" spellcheck="false">
+            <span class="field-hint">SPF · DKIM · DMARC · MX · BIMI · blacklists</span>
+          </div>
+          <div class="field">
+            <label for="dkimSel">DKIM selector <span class="optional">optional</span></label>
+            <input type="text" id="dkimSel" placeholder="e.g. google, s1, mail" autocomplete="off" spellcheck="false">
+            <span class="field-hint">Find in the s= field of your DKIM-Signature header</span>
+          </div>
+          <div class="field">
+            <label for="ip">Sending IP <span class="optional">optional</span></label>
+            <input type="text" id="ip" placeholder="e.g. 198.51.100.42" autocomplete="off" spellcheck="false">
+            <span class="field-hint">rDNS · forward-confirm · IP blacklists</span>
+          </div>
+          <div class="field">
+            <label for="returnPath">Bounce domain <span class="optional">optional</span></label>
+            <input type="text" id="returnPath" placeholder="e.g. bounce.yourcompany.com" autocomplete="off" spellcheck="false">
+            <span class="field-hint">Envelope sender — SPF alignment check</span>
+          </div>
+        </div>
+        <div class="tool-footer">
+          <button class="btn btn-primary" id="runBtn" onclick="runAudit()">
+            <span id="btnLabel">Run audit</span>
+            <div class="spinner" id="spinner" style="display:none"></div>
+          </button>
+          <span class="tool-note">Enter at least a domain or IP to begin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="stream-wrap" id="streamWrap">
+    <div style="max-width:580px;margin:0 auto">
+      <div class="stream-log" id="streamLog"></div>
+    </div>
+  </div>
+  <div class="err-box" id="errBox"></div>
+  <div id="audit-results-outer">
+    <div class="results-inner" id="auditResults"></div>
+  </div>
+</div>
+
+<!-- HEADER ANALYZER -->
+<div class="panel" id="panel-header">
+  <div class="tool-wrap" id="headerWrap">
+    <div class="tool-inner">
+      <div class="tool-hero">
+        <div class="hero-wordmark">Reach<span class="accent">able</span></div>
+        <span class="hero-cap">Header Analyzer</span>
+      </div>
+      <div class="tool-card">
+        <div class="upload-zone" id="hdrDropZone" onclick="document.getElementById('hdrFileInput').click()">
+          <input type="file" id="hdrFileInput" accept=".txt,.eml,text/plain" style="display:none">
+          <span class="upload-icon">📄</span>
+          <div class="upload-text">Drop a <strong>.txt</strong> or <strong>.eml</strong> file, or <span class="upload-link">browse to upload</span></div>
+          <div class="upload-filename" id="hdrFileName"></div>
+        </div>
+        <div class="or-divider"><span>or paste headers below</span></div>
+        <textarea id="headerInput" rows="7" style="width:100%;font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;resize:vertical;line-height:1.65;transition:border-color var(--transition),box-shadow var(--transition)" placeholder="Paste your raw email headers here...&#10;&#10;Gmail: open email, click the three dots, Show original&#10;Outlook: File, Properties, Internet headers"></textarea>
+        <div class="tool-footer">
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="analyzeHeaders()">Analyze headers</button>
+            <button class="btn btn-ghost" onclick="clearHeaders()">Clear</button>
+          </div>
+          <span class="tool-note">Works with Gmail, Outlook, Apple Mail and any .eml</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-results-wrap" id="hdrResultsWrap">
+    <div id="hdrResults"></div>
+  </div>
+</div>
+
+<!-- DNS SIMULATOR -->
+<div class="panel" id="panel-simulator">
+  <div class="tool-wrap" id="simWrap">
+    <div class="tool-inner">
+      <div class="tool-hero">
+        <div class="hero-wordmark">Reach<span class="accent">able</span></div>
+        <span class="hero-cap">DNS Simulator</span>
+      </div>
+      <div class="tool-card">
+        <div class="form-grid">
+          <div class="field">
+            <label for="simDomain">Domain <span class="optional">for context</span></label>
+            <input type="text" id="simDomain" placeholder="yourcompany.com" autocomplete="off" spellcheck="false">
+            <span class="field-hint">Used for context, not queried live</span>
+          </div>
+          <div class="field">
+            <label for="simType">Record type</label>
+            <select id="simType">
+              <option value="spf">SPF (TXT record)</option>
+              <option value="dmarc">DMARC (TXT record)</option>
+            </select>
+          </div>
+          <div class="field field-full">
+            <label for="simRecord">Proposed record value</label>
+            <textarea id="simRecord" rows="3" style="width:100%;font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;resize:vertical;line-height:1.65;transition:border-color var(--transition),box-shadow var(--transition)" placeholder="v=spf1 include:_spf.google.com ~all"></textarea>
+            <span class="field-hint">Paste the value exactly as you plan to publish it in DNS</span>
+          </div>
+        </div>
+        <div class="tool-footer">
+          <button class="btn btn-primary" onclick="runSimulator()">Simulate record</button>
+          <span class="tool-note">No DNS changes are made — analysis only</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sim-results-wrap" id="simResultsWrap">
+    <div id="simResults"></div>
+  </div>
+</div>
+
+<!-- DOCS -->
+<div class="panel" id="panel-docs">
+  <div class="tool-wrap" id="docsWrap" style="justify-content:flex-start;padding-top:2rem">
+    <div class="tool-inner" style="max-width:640px">
+      <div class="tool-hero" style="margin-bottom:1.5rem">
+        <div class="hero-wordmark">Reach<span class="accent">able</span></div>
+        <span class="hero-cap">Documentation</span>
+      </div>
+      <div class="docs-card">
+        <p class="docs-intro">Reachable checks the technical infrastructure behind your email sending. Everything runs in your browser using Cloudflare DNS. Nothing you enter is stored, tracked or logged.</p>
+
+        <div class="docs-section">
+          <div class="docs-section-title">Domain Audit</div>
+          <div class="docs-items">
+            <div class="docs-item"><span class="docs-tag">SPF</span><span class="docs-desc">Checks which servers are authorised to send email for your domain. Validates the all mechanism, lookup count against the 10-lookup limit, and flags configurations like +all.</span></div>
+            <div class="docs-item"><span class="docs-tag">DKIM</span><span class="docs-desc">Verifies your public key exists at the selector you provide. Follows CNAME chains. Estimates key size and flags weak or revoked keys.</span></div>
+            <div class="docs-item"><span class="docs-tag">DMARC</span><span class="docs-desc">Checks your policy (p=), subdomain policy (sp=), sampling rate (pct=), and whether aggregate reports are configured (rua=). Falls back to org domain if needed.</span></div>
+            <div class="docs-item"><span class="docs-tag">MX</span><span class="docs-desc">Confirms inbound mail delivery is configured for your domain.</span></div>
+            <div class="docs-item"><span class="docs-tag">BIMI</span><span class="docs-desc">Checks whether your brand logo is configured to appear in Gmail, Yahoo and Apple Mail.</span></div>
+            <div class="docs-item"><span class="docs-tag">MTA-STS</span><span class="docs-desc">Checks whether TLS is enforced for inbound email connections.</span></div>
+            <div class="docs-item"><span class="docs-tag">Blacklists</span><span class="docs-desc">Queries URIBL, SURBL and DBL Spamhaus for your domain reputation.</span></div>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">IP Checks</div>
+          <div class="docs-items">
+            <div class="docs-item"><span class="docs-tag">rDNS</span><span class="docs-desc">Looks up the PTR record for your IP and forward-confirms it resolves back to the same IP. Supports IPv4 and IPv6.</span></div>
+            <div class="docs-item"><span class="docs-tag">IP Blacklists</span><span class="docs-desc">Queries Spamhaus ZEN, Barracuda, SORBS, SpamCop and MXToolbox. Validates actual positive response codes to avoid false positives.</span></div>
+          </div>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">Header Analyzer</div>
+          <p style="font-size:13px;color:var(--text-2);line-height:1.7">Paste raw email headers from Gmail (three dots menu, Show original) or Outlook (File, Properties, Internet headers). Reachable decodes SPF, DKIM, DMARC and ARC results in transit, shows the routing path hop by hop, and flags spam signals.</p>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">DNS Simulator</div>
+          <p style="font-size:13px;color:var(--text-2);line-height:1.7">Paste a proposed SPF or DMARC record before publishing it. For SPF, Reachable estimates the DNS lookup count and flags dangerous configurations. For DMARC, it validates p=, pct=, rua= and sp=. No DNS changes are made.</p>
+        </div>
+
+        <div class="docs-section">
+          <div class="docs-section-title">Severity levels</div>
+          <div class="docs-items">
+            <div class="docs-item"><span class="docs-tag red">Critical</span><span class="docs-desc">Fix immediately. These are actively hurting your deliverability or leaving your domain open to spoofing.</span></div>
+            <div class="docs-item"><span class="docs-tag amber">Important</span><span class="docs-desc">Should be addressed soon. Not breaking anything today but could become a problem.</span></div>
+            <div class="docs-item"><span class="docs-tag green">Pass</span><span class="docs-desc">This check is correctly configured.</span></div>
+            <div class="docs-item"><span class="docs-tag blue">Info</span><span class="docs-desc">Optional or informational. Worth knowing about but not urgent.</span></div>
+          </div>
+        </div>
+
+        <p class="docs-note">Checks run through Reachable's proxy (a Cloudflare Worker) which queries DNS server-side. This works on corporate networks that block direct DNS-over-HTTPS. If the proxy is unreachable, requests fall back to Cloudflare, Google and NextDNS public resolvers. Nothing is logged or stored. Blacklist coverage is representative — also check Google Postmaster Tools and your ESP dashboard.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
