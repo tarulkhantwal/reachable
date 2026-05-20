@@ -499,14 +499,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sy
           </div>
         </div>
 
-        <p class="docs-note">All checks use Cloudflare DNS-over-HTTPS (cloudflare-dns.com/dns-query). Blacklist checks cover a representative sample — for comprehensive coverage also check Google Postmaster Tools and your ESP dashboard.</p>
+        <p class="docs-note">Checks run through Reachable's proxy (a Cloudflare Worker) which queries DNS server-side. This works on corporate networks that block direct DNS-over-HTTPS. If the proxy is unreachable, requests fall back to Cloudflare, Google and NextDNS public resolvers. Nothing is logged or stored. Blacklist coverage is representative — also check Google Postmaster Tools and your ESP dashboard.</p>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const DNS_TIMEOUT=5000;
+/* ─────────────────────────────────────────────────────────────
+   DNS layer — Worker proxy with direct-DoH fallback
+   ─────────────────────────────────────────────────────────────
+   Primary: our Cloudflare Worker (api.reachable.info) which proxies
+   queries server-side. This bypasses corporate TLS-inspection
+   proxies that block DoH endpoints like cloudflare-dns.com.
+
+   Fallback: direct DoH to Cloudflare/Google/NextDNS. Useful for
+   local dev and if the Worker is temporarily down. The Worker and
+   direct DoH both return Google's JSON DoH schema, so this is a
+   transparent drop-in. */
+const DNS_TIMEOUT=6000;
+const DNS_RETRIES=2;
+const DNS_RETRY_DELAY=400;
+
+// CHANGE THIS to your deployed Worker URL once you've run `wrangler deploy`
+// e.g. 'https://api.reachable.info' or 'https://reachable-dns.<your-account>.workers.dev'
+const PROXY_URL='https://reachable-dns.icda-you.workers.dev';
+
+const RESOLVERS=[
+  {name:'Proxy',     url:PROXY_URL,                              accept:'application/dns-json', priority:1},
+  {name:'Cloudflare',url:'https://cloudflare-dns.com/dns-query', accept:'application/dns-json', priority:0},
+  {name:'Google',    url:'https://dns.google/resolve',           accept:'application/dns-json', priority:0},
+  {name:'NextDNS',   url:'https://dns.nextdns.io',               accept:'application/dns-json', priority:0}
+];
+const resolverHealth={Proxy:2,Cloudflare:1,Google:1,NextDNS:1};
+let adBlockerSuspected=false;
 const KNOW_HOW={spf:`SPF lists which servers are allowed to send email for your domain. Receiving servers check it on every message. Missing SPF means anyone can impersonate you. More than 10 DNS lookups causes a permerror — treated as a hard fail.`,dkim:`DKIM signs every outbound email with a cryptographic key. The receiving server fetches your public key from DNS and verifies it wasn't tampered with. Without DKIM there's no proof an email genuinely came from you.`,dmarc:`DMARC tells receiving servers what to do when SPF or DKIM fails — nothing, quarantine, or reject. It also sends you aggregate reports so you can see who's sending from your domain. Without DMARC, spoofing goes unchecked.`,mx:`MX records tell other mail servers where to deliver email sent to your domain. Without them, replies bounce and your domain looks misconfigured.`,rdns:`Reverse DNS (PTR) maps your sending IP to a hostname. Forward-confirmed rDNS means that hostname also resolves back to the same IP. Most receiving servers check this — a missing PTR is a classic spam signal.`,blacklist:`Blocklists are real-time databases of IPs and domains flagged for spam. If listed, receiving servers may reject or bulk-folder your mail. Always fix the root cause before requesting removal.`,bimi:`BIMI lets your brand logo appear in supported inboxes like Gmail, Yahoo and Apple Mail. It needs a strong DMARC policy and a DNS record pointing to your SVG logo.`,tls:`MTA-STS enforces TLS encryption for inbound email, preventing downgrade attacks. Without it, connections can fall back to unencrypted.`};
 const FIX_DATA={spf_missing:{steps:`Add a TXT record on your domain's DNS that tells the world which servers are allowed to send on your behalf.`,record:`v=spf1 include:YOUR_ESP ~all`,providers:{'Google Workspace':{record:`v=spf1 include:_spf.google.com ~all`,note:`Replace with your actual record if you send from other services too.`},'Microsoft 365':{record:`v=spf1 include:spf.protection.outlook.com ~all`,note:`Add other includes if you send from additional platforms.`},'SendGrid':{record:`v=spf1 include:sendgrid.net ~all`,note:`SendGrid recommends using DKIM as the primary authentication method.`},'Mailgun':{record:`v=spf1 include:mailgun.org ~all`,note:``},'AWS SES':{record:`v=spf1 include:amazonses.com ~all`,note:`Only needed if not using a custom MAIL FROM domain.`},'Postmark':{record:`v=spf1 include:spf.mtasv.net ~all`,note:`Postmark also provides DKIM — use both.`}}},dmarc_missing:{steps:`Add a TXT record at _dmarc.yourdomain.com. Start with p=none to monitor, then move to quarantine or reject once confident.`,record:`v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com; fo=1`,providers:{'Starter (monitoring)':{record:`v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`,note:`p=none means monitoring only. No enforcement yet.`},'Intermediate':{record:`v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@yourdomain.com`,note:`25% of failing mail goes to spam. Increase pct gradually.`},'Strict':{record:`v=DMARC1; p=reject; rua=mailto:dmarc@yourdomain.com; ruf=mailto:dmarc@yourdomain.com; fo=1`,note:`All failing mail is rejected. Only use when fully confident.`}}},dkim_missing:{steps:`DKIM requires a private/public key pair. Your ESP generates this. Add the public key as a TXT record at selector._domainkey.yourdomain.com.`,record:`Contact your ESP to generate a DKIM key pair.`,providers:{'Google Workspace':{record:`Admin Console > Apps > Google Workspace > Gmail > Authenticate email`,note:`Google generates the key and gives you the exact record to publish.`},'Microsoft 365':{record:`Microsoft 365 Defender > Email and collaboration > Policies > DKIM`,note:`M365 uses CNAMEs, not TXT records.`},'SendGrid':{record:`Settings > Sender Authentication > Domain Authentication`,note:`SendGrid generates two CNAME records for your DNS.`},'Mailgun':{record:`Sending > Domains > your domain > DNS records`,note:`Mailgun gives you the exact TXT record.`}}}};
 
@@ -516,20 +542,154 @@ function normalizeIP(r){r=(r||'').trim();if(r.startsWith('[')&&r.endsWith(']'))r
 function isIPv4(ip){return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);}
 function isIPv6(ip){return ip.includes(':');}
 function reverseIPv4(ip){return ip.split('.').reverse().join('.');}
-function reverseIPv6(ip){return ip.split(':').map(g=>g.padStart(4,'0')).join('').split('').reverse().join('.');}
+function reverseIPv6(ip){
+  // Properly expand :: shorthand to 8 groups before reversing
+  let groups;
+  if(ip.includes('::')){
+    const [head,tail]=ip.split('::');
+    const headGroups=head?head.split(':'):[];
+    const tailGroups=tail?tail.split(':'):[];
+    const missing=8-headGroups.length-tailGroups.length;
+    groups=[...headGroups,...Array(missing).fill('0'),...tailGroups];
+  }else{
+    groups=ip.split(':');
+  }
+  if(groups.length!==8)return ip.split(':').map(g=>g.padStart(4,'0')).join('').split('').reverse().join('.');
+  return groups.map(g=>g.padStart(4,'0')).join('').split('').reverse().join('.');
+}
 
+// Single resolver query — always cleans up its timer
+async function querySingleResolver(resolver,name,type,timeoutMs){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),timeoutMs);
+  try{
+    const r=await fetch(`${resolver.url}?name=${encodeURIComponent(name)}&type=${type}`,{
+      method:'GET',mode:'cors',credentials:'omit',
+      headers:{'Accept':resolver.accept},signal:ctrl.signal
+    });
+    if(!r.ok)return{status:'error',errorType:`http_${r.status}`,answer:[],resolver:resolver.name};
+    const d=await r.json();
+    if(d.Status===2)return{status:'servfail',errorType:'SERVFAIL',answer:[],resolver:resolver.name};
+    if(d.Status===3)return{status:'nxdomain',errorType:'NXDOMAIN',answer:[],resolver:resolver.name};
+    return{status:'ok',errorType:null,answer:d.Answer||[],resolver:resolver.name};
+  }catch(e){
+    if(e.name==='AbortError')return{status:'timeout',errorType:'timeout',answer:[],resolver:resolver.name};
+    return{status:'error',errorType:e.message||'network_error',answer:[],resolver:resolver.name};
+  }finally{
+    clearTimeout(tid);
+  }
+}
+
+// Order resolvers — proxy always tried first if healthy, then by health score
+function orderedResolvers(){
+  return RESOLVERS.slice().sort((a,b)=>{
+    const ph=(resolverHealth[b.name]||0)+(b.priority||0)*10;
+    const ah=(resolverHealth[a.name]||0)+(a.priority||0)*10;
+    return ph-ah;
+  });
+}
+
+// Race resolvers; first non-failure wins
+async function hedgedQuery(resolvers,name,type,timeoutMs){
+  if(resolvers.length===1)return querySingleResolver(resolvers[0],name,type,timeoutMs);
+  return new Promise(resolve=>{
+    let settled=false;let pending=resolvers.length;let lastResult=null;
+    resolvers.forEach(r=>{
+      querySingleResolver(r,name,type,timeoutMs).then(res=>{
+        pending--;
+        if(!settled&&(res.status==='ok'||res.status==='nxdomain')){
+          settled=true;
+          resolverHealth[res.resolver]=Math.min((resolverHealth[res.resolver]||0)+1,5);
+          resolve(res);return;
+        }
+        if(res.resolver)resolverHealth[res.resolver]=Math.max((resolverHealth[res.resolver]||0)-1,-3);
+        lastResult=res;
+        if(pending===0&&!settled){settled=true;resolve(lastResult);}
+      });
+    });
+  });
+}
+
+// Detect total network-layer failure (corporate proxy, TLS interception, ad-blocker)
+function isNetworkLayerFail(r){
+  if(!r)return false;
+  if(r.status==='timeout')return true;
+  if(r.errorType&&(r.errorType==='network_error'||r.errorType.includes('Failed to fetch')||r.errorType.includes('NetworkError')))return true;
+  return false;
+}
+
+// Main entry — proxy first, then hedge across direct DoH
 async function dnsLookup(name,type){
-  const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),DNS_TIMEOUT);
-  try{const r=await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,{method:'GET',mode:'cors',credentials:'omit',headers:{'Accept':'application/dns-json'},signal:ctrl.signal});clearTimeout(tid);if(!r.ok)return{status:'error',errorType:'http_'+r.status,answer:[]};const d=await r.json();if(d.Status===2)return{status:'servfail',errorType:'SERVFAIL',answer:[]};if(d.Status===3)return{status:'nxdomain',errorType:'NXDOMAIN',answer:[]};return{status:'ok',errorType:null,answer:d.Answer||[]};}
-  catch(e){clearTimeout(tid);return e.name==='AbortError'?{status:'timeout',errorType:'timeout',answer:[]}:{status:'error',errorType:e.message,answer:[]};}
+  const ordered=orderedResolvers();
+  const proxy=ordered.find(r=>r.name==='Proxy');
+  const directs=ordered.filter(r=>r.name!=='Proxy');
+
+  // 1. Try the proxy alone first (it's our reliable path through corporate networks)
+  if(proxy&&(resolverHealth.Proxy||0)>-2){
+    const proxyResult=await querySingleResolver(proxy,name,type,DNS_TIMEOUT);
+    if(proxyResult.status==='ok'||proxyResult.status==='nxdomain'){
+      resolverHealth.Proxy=Math.min((resolverHealth.Proxy||0)+1,5);
+      return proxyResult;
+    }
+    resolverHealth.Proxy=Math.max((resolverHealth.Proxy||0)-1,-3);
+  }
+
+  // 2. Fall back to hedging direct DoH (top 2 in parallel)
+  let lastResult=null;
+  for(let attempt=0;attempt<DNS_RETRIES;attempt++){
+    const result=await hedgedQuery(directs.slice(0,2),name,type,DNS_TIMEOUT);
+    if(result.status==='ok'||result.status==='nxdomain')return result;
+    lastResult=result;
+    if(attempt===DNS_RETRIES-1&&directs.length>2){
+      const fallback=await querySingleResolver(directs[2],name,type,DNS_TIMEOUT);
+      if(fallback.status==='ok'||fallback.status==='nxdomain')return fallback;
+      lastResult=fallback;
+    }
+    if(attempt<DNS_RETRIES-1)await new Promise(r=>setTimeout(r,DNS_RETRY_DELAY+Math.random()*200));
+  }
+
+  // 3. Everything failed at the network layer → flag for the UI banner
+  if(isNetworkLayerFail(lastResult))adBlockerSuspected=true;
+
+  return lastResult||{status:'error',errorType:'all_resolvers_failed',answer:[]};
 }
 function normTXT(d){return d.replace(/"\s+"/g,'').replace(/^"|"$/g,'').trim();}
 function lookupFailed(r){return r.status==='timeout'||r.status==='error'||r.status==='servfail';}
 async function countSPFLookups(domain,depth=0,visited=new Set()){if(depth>10||visited.has(domain))return 0;visited.add(domain);const res=await dnsLookup(domain,'TXT');if(res.status!=='ok')return 0;const spf=res.answer.map(a=>normTXT(a.data)).find(d=>d.startsWith('v=spf1'));if(!spf)return 0;let count=0;for(const t of spf.split(/\s+/)){if(/^[+-~?]?(include|a|mx|ptr|exists):/.test(t))count++;if(t.startsWith('include:'))count+=await countSPFLookups(t.split(':')[1],depth+1,visited);if(t.startsWith('redirect=')){count++;count+=await countSPFLookups(t.split('=')[1],depth+1,visited);}}return count;}
-async function resolveDKIM(sel,domain,depth=0){if(depth>5)return{status:'error',errorType:'CNAME chain too deep',answer:[]};const host=`${sel}._domainkey.${domain}`;const t=await dnsLookup(host,'TXT');if(t.status==='ok'&&t.answer.length)return t;const c=await dnsLookup(host,'CNAME');if(c.status==='ok'&&c.answer.length)return await dnsLookup(c.answer[0].data.replace(/\.$/,''),'TXT');return t;}
+async function resolveDKIM(sel,domain,depth=0,visited=new Set()){
+  if(depth>5)return{status:'error',errorType:'CNAME chain too deep',answer:[]};
+  const host=depth===0?`${sel}._domainkey.${domain}`:domain;
+  if(visited.has(host))return{status:'error',errorType:'CNAME loop',answer:[]};
+  visited.add(host);
+  const t=await dnsLookup(host,'TXT');
+  if(t.status==='ok'&&t.answer.length){
+    // If we got a CNAME mixed with TXT, follow CNAME chain
+    const txts=t.answer.filter(a=>a.type===16);
+    if(txts.length)return{...t,answer:txts};
+  }
+  const c=await dnsLookup(host,'CNAME');
+  if(c.status==='ok'&&c.answer.length){
+    const target=c.answer[0].data.replace(/\.$/,'');
+    return resolveDKIM(null,target,depth+1,visited);
+  }
+  return t;
+}
 async function forwardConfirm(hostname,ip){const res=await dnsLookup(hostname.replace(/\.$/,''),isIPv6(ip)?'AAAA':'A');return res.status==='ok'&&res.answer.some(a=>a.data===ip);}
-const IP_LISTS=[{name:'Spamhaus ZEN',host:'zen.spamhaus.org',pos:'127.0.0.'},{name:'Barracuda',host:'b.barracudacentral.org',pos:'127.0.0.2'},{name:'SORBS SPAM',host:'spam.sorbs.net',pos:'127.0.0.'},{name:'SpamCop',host:'bl.spamcop.net',pos:'127.0.0.2'},{name:'MXToolbox',host:'dnsbl.mxtoolbox.com',pos:'127.0.0.'}];
-const DOM_LISTS=[{name:'URIBL',host:'multi.uribl.com',pos:'127.0.0.'},{name:'SURBL',host:'multi.surbl.org',pos:'127.0.0.'},{name:'DBL Spamhaus',host:'dbl.spamhaus.org',pos:'127.0.1.'}];
+// Public DNSBLs queryable via DoH. MXToolbox isn't a real DNSBL (it's a tool).
+// SORBS shut down in June 2024 — removed. URIBL/SURBL public-tier rate-limits
+// browser-origin queries heavily — we keep them but expect occasional timeouts.
+const IP_LISTS=[
+  {name:'Spamhaus ZEN',host:'zen.spamhaus.org',pos:'127.0.0.'},
+  {name:'Barracuda',host:'b.barracudacentral.org',pos:'127.0.0.2'},
+  {name:'SpamCop',host:'bl.spamcop.net',pos:'127.0.0.2'},
+  {name:'Spamhaus PBL',host:'pbl.spamhaus.org',pos:'127.0.0.'},
+  {name:'UCEPROTECT-1',host:'dnsbl-1.uceprotect.net',pos:'127.0.0.2'}
+];
+const DOM_LISTS=[
+  {name:'URIBL',host:'multi.uribl.com',pos:'127.0.0.'},
+  {name:'SURBL',host:'multi.surbl.org',pos:'127.0.0.'},
+  {name:'DBL Spamhaus',host:'dbl.spamhaus.org',pos:'127.0.1.'}
+];
 async function checkIPBlacklists(ip){const rev=isIPv6(ip)?reverseIPv6(ip):reverseIPv4(ip);return Promise.all(IP_LISTS.map(async l=>{const r=await dnsLookup(`${rev}.${l.host}`,'A');if(lookupFailed(r))return{name:l.name,result:'timeout'};if(r.status==='nxdomain'||!r.answer.length)return{name:l.name,result:'clean'};return{name:l.name,result:r.answer.some(a=>a.data.startsWith(l.pos))?'listed':'clean',code:r.answer[0]?.data};}));}
 async function checkDomainBlacklists(domain){return Promise.all(DOM_LISTS.map(async l=>{const r=await dnsLookup(`${domain}.${l.host}`,'A');if(lookupFailed(r))return{name:l.name,result:'timeout'};if(r.status==='nxdomain'||!r.answer.length)return{name:l.name,result:'clean'};return{name:l.name,result:r.answer.some(a=>a.data.startsWith(l.pos))?'listed':'clean'};}));}
 function orgDomain(d){const p=d.split('.');return p.length<=2?d:p.slice(-2).join('.');}
@@ -646,10 +806,17 @@ async function runAudit(){
   const criticals=[];const readinessChecks=[];
   function tally(sev,label){if(sev==='critical'){critCount++;if(label)criticals.push(label);}else if(sev==='important')impCount++;else if(sev==='pass')passCount++;else infoCount++;}
   const allSections=[];
-  try{const[domSections,ipSection]=await Promise.all([domain?auditDomain(domain,sel,rpDomain,tally,readinessChecks):Promise.resolve([]),ip?auditIP(ip,tally,readinessChecks):Promise.resolve(null)]);allSections.push(...domSections);if(ipSection)allSections.push(ipSection);}
+  try{const[domSections,ipSection]=await Promise.all([domain?auditDomain(domain,sel,rpDomain,tally,readinessChecks,runId):Promise.resolve([]),ip?auditIP(ip,tally,readinessChecks):Promise.resolve(null)]);allSections.push(...domSections);if(ipSection)allSections.push(ipSection);}
   catch(e){setLoading(false);const b=document.getElementById('errBox');b.textContent='Error: '+e.message;b.style.display='block';return;}
   if(runId!==currentRunId){setLoading(false);return;}
   setLoading(false);
+  // If every DNS lookup failed at the network layer, surface a helpful message
+  if(adBlockerSuspected){
+    const b=document.getElementById('errBox');
+    b.innerHTML='<strong>DNS queries are being blocked on your network.</strong> This usually means a corporate proxy, VPN, or browser extension is blocking DNS-over-HTTPS. Common causes: enterprise TLS inspection (Zscaler, Palo Alto, Netskope), browser extensions (uBlock, AdGuard), or strict network firewalls. Try a personal network, or contact your IT team if this is a work device.';
+    b.style.display='block';
+    adBlockerSuspected=false;
+  }
   const total=critCount+impCount+passCount;const score=total?Math.round((passCount/total)*100):0;
   const scoreColor=score>=80?'var(--green)':score>=55?'var(--amber)':'var(--red)';
   const scoreLabel=score>=80?'Looking good':score>=55?'Needs attention':'Critical issues';
@@ -675,22 +842,22 @@ async function runAudit(){
   allSections.forEach(s=>{s.cards.forEach(c=>{const k=c._severity;if(bySev[k])bySev[k].push(c);});renderSection(s.title,s.cards,sw);});
   ['critical','important','pass','info'].forEach(st=>{const cards=bySev[st];if(!cards.length)return;const anchor=document.createElement('div');anchor.id=`group-${st}`;anchor.style.scrollMarginTop='12px';cards[0].parentNode?.insertBefore(anchor,cards[0]);statusGroups.push({status:st,el:anchor});});
   frag.appendChild(sw);
-  const note=document.createElement('div');note.className='results-note';note.textContent='Checks run via Cloudflare DNS-over-HTTPS and public DNSBL lookups. Nothing is stored. Also check Google Postmaster Tools and your ESP dashboard for full coverage.';
+  const note=document.createElement('div');note.className='results-note';note.textContent='Checks run via Reachable\'s proxy with fallback to Cloudflare, Google and NextDNS. Nothing is stored. Also check Google Postmaster Tools and your ESP dashboard for full coverage.';
   frag.appendChild(note);
   resultsEl.appendChild(frag);document.getElementById('audit-results-outer').style.display='block';
   setTimeout(()=>{const arc=document.getElementById('scoreArc');if(arc){const offset=188-Math.round((score/100)*188);arc.style.stroke=scoreColor;arc.style.strokeDashoffset=offset;}},100);
 }
 
-async function auditDomain(domain,sel,rpDomain,tally,readiness){
+async function auditDomain(domain,sel,rpDomain,tally,readiness,runId){
   const sections=[];
   const s1=streamLog(`Checking SPF on ${domain}...`);const s2=streamLog('Checking DMARC policy...');const s3=streamLog(sel?`Verifying DKIM selector "${sel}"...`:'DKIM: no selector provided');const s4=streamLog('Checking MX, BIMI, MTA-STS...');const s5=streamLog('Querying domain blacklists...');
   const[spfRes,dmarcRes,dmarcOrgRes,mxRes,bimiRes,mtaRes,dkimRes,rpSpfRes,domBL]=await Promise.all([dnsLookup(domain,'TXT'),dnsLookup(`_dmarc.${domain}`,'TXT'),dnsLookup(`_dmarc.${orgDomain(domain)}`,'TXT'),dnsLookup(domain,'MX'),dnsLookup(`default._bimi.${domain}`,'TXT'),dnsLookup(`_mta-sts.${domain}`,'TXT'),sel?resolveDKIM(sel,domain):Promise.resolve(null),rpDomain&&rpDomain!==domain?dnsLookup(rpDomain,'TXT'):Promise.resolve(null),checkDomainBlacklists(domain)]);
   const authCards=[];
   if(lookupFailed(spfRes)){s1.resolve('info');authCards.push(makeCard('SPF record','timeout','',`DNS lookup failed (${spfRes.errorType}).`,'spf'));readiness.push({label:'SPF configured',status:'fail'});}
-  else{const recs=spfRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=spf1'));if(!recs.length){s1.resolve('fail');tally('critical','No SPF record on '+domain);authCards.push(makeCard('SPF record','critical','No record found',`No SPF TXT record for ${domain}. Any server can send as you right now.`,'spf','spf_missing'));readiness.push({label:'SPF configured',status:'fail'});}else if(recs.length>1){s1.resolve('fail');tally('critical','Multiple SPF records on '+domain);authCards.push(makeCard('SPF record','critical',recs.join(' | '),'Multiple SPF records. Only one is allowed.','spf'));readiness.push({label:'SPF configured',status:'warn'});}else{const spf=recs[0];let sev='pass',desc='SPF record found. ';if(spf.includes('+all')){sev='critical';tally('critical','SPF uses +all');desc+='+all allows any server to send as you. Critical misconfiguration.';}else if(spf.includes('?all')){sev='important';tally('important');desc+='?all does not reject unauthorised senders. Use ~all or -all.';}else if(spf.includes('~all')){tally('pass');desc+='~all (softfail) flags unauthorised senders.';}else if(spf.includes('-all')){tally('pass');desc+='-all rejects unauthorised senders. Strongest setting.';}else{sev='important';tally('important');desc+='No all mechanism. SPF result is undefined for unknown senders.';}s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');const c=makeCard('SPF record',sev,spf,desc,'spf');authCards.push(c);readiness.push({label:'SPF configured',status:sev==='pass'?'pass':sev==='critical'?'fail':'warn'});countSPFLookups(domain).then(n=>{const d=c.querySelector('.card-desc');if(!d)return;if(n>10)d.textContent+=` Also: ${n} DNS lookups — exceeds the limit of 10.`;else if(n>8)d.textContent+=` Approaching the 10-lookup limit (~${n} detected).`;});}}
+  else{const recs=spfRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=spf1'));if(!recs.length){s1.resolve('fail');tally('critical','No SPF record on '+domain);authCards.push(makeCard('SPF record','critical','No record found',`No SPF TXT record for ${domain}. Any server can send as you right now.`,'spf','spf_missing'));readiness.push({label:'SPF configured',status:'fail'});}else if(recs.length>1){s1.resolve('fail');tally('critical','Multiple SPF records on '+domain);authCards.push(makeCard('SPF record','critical',recs.join(' | '),'Multiple SPF records. Only one is allowed.','spf'));readiness.push({label:'SPF configured',status:'warn'});}else{const spf=recs[0];let sev='pass',desc='SPF record found. ';if(spf.includes('+all')){sev='critical';tally('critical','SPF uses +all');desc+='+all allows any server to send as you. Critical misconfiguration.';}else if(spf.includes('?all')){sev='important';tally('important');desc+='?all does not reject unauthorised senders. Use ~all or -all.';}else if(spf.includes('~all')){tally('pass');desc+='~all (softfail) flags unauthorised senders.';}else if(spf.includes('-all')){tally('pass');desc+='-all rejects unauthorised senders. Strongest setting.';}else{sev='important';tally('important');desc+='No all mechanism. SPF result is undefined for unknown senders.';}s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');const c=makeCard('SPF record',sev,spf,desc,'spf');authCards.push(c);readiness.push({label:'SPF configured',status:sev==='pass'?'pass':sev==='critical'?'fail':'warn'});countSPFLookups(domain).then(n=>{if(runId!==currentRunId)return;const d=c.querySelector('.card-desc');if(!d)return;if(n>10)d.textContent+=` Also: ${n} DNS lookups — exceeds the limit of 10.`;else if(n>8)d.textContent+=` Approaching the 10-lookup limit (~${n} detected).`;});}}
   const dmTXTs=dmarcRes.status==='ok'?dmarcRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=DMARC1')):[];const orgTXTs=dmarcOrgRes.status==='ok'?dmarcOrgRes.answer.map(a=>normTXT(a.data)).filter(d=>d.startsWith('v=DMARC1')):[];const dmRec=dmTXTs[0]||orgTXTs[0]||null;const usedOrg=!dmTXTs.length&&orgTXTs.length>0;
   if(lookupFailed(dmarcRes)){s2.resolve('info');authCards.push(makeCard('DMARC record','timeout','',`Lookup failed (${dmarcRes.errorType}).`,'dmarc'));readiness.push({label:'DMARC enforced',status:'fail'});}else if(!dmRec){s2.resolve('fail');tally('critical','No DMARC record');authCards.push(makeCard('DMARC record','critical','No record found',`No DMARC record at _dmarc.${domain}. Spoofing is unchecked.`,'dmarc','dmarc_missing'));readiness.push({label:'DMARC enforced',status:'fail'});}else if(dmTXTs.length>1){s2.resolve('fail');tally('critical','Multiple DMARC records');authCards.push(makeCard('DMARC record','critical','Multiple records','Only one DMARC record allowed.','dmarc'));readiness.push({label:'DMARC enforced',status:'warn'});}else{const p=(dmRec.match(/\bp=(\w+)/)||[])[1]||'none';const sp=(dmRec.match(/\bsp=(\w+)/)||[])[1];const pct=(dmRec.match(/\bpct=(\d+)/)||[])[1];const rua=dmRec.includes('rua=');const fo=(dmRec.match(/\bfo=([^;]+)/)||[])[1];const sev=p==='reject'||p==='quarantine'?'pass':'important';let desc=`Policy: p=${p}. `;if(p==='none')desc+='Monitoring only.';else if(p==='quarantine')desc+='Failing emails go to spam.';else desc+='Strictest setting.';if(sp)desc+=` sp=${sp}.`;if(pct&&pct!=='100')desc+=` Only ${pct}% subject to policy.`;if(!rua)desc+=` No rua= — you will not receive authentication reports.`;if(fo)desc+=` fo=${fo}.`;if(usedOrg)desc+=` (Inherited from org domain.)`;tally(sev);s2.resolve(sev==='pass'?'done':'warn');authCards.push(makeCard('DMARC record',sev,dmRec,desc,'dmarc'));readiness.push({label:'DMARC enforced',status:p==='reject'||p==='quarantine'?'pass':'warn'});}
-  if(!sel){s3.resolve('info');authCards.push(makeCard('DKIM record','info','No selector provided','Enter your DKIM selector above to check this.','dkim'));readiness.push({label:'DKIM signed',status:'info'});}else if(!dkimRes||lookupFailed(dkimRes)){s3.resolve('info');authCards.push(makeCard('DKIM record','timeout',`${sel}._domainkey.${domain}`,`Lookup failed.`,'dkim'));readiness.push({label:'DKIM signed',status:'fail'});}else{const dkRecs=dkimRes.answer.map(a=>normTXT(a.data)).filter(d=>d.includes('p='));if(!dkRecs.length){s3.resolve('fail');tally('critical',`No DKIM record for selector "${sel}"`);authCards.push(makeCard('DKIM record','critical',`${sel}._domainkey.${domain}`,'No DKIM record found.','dkim','dkim_missing'));readiness.push({label:'DKIM signed',status:'fail'});}else{const dk=dkRecs[0];const pm=dk.match(/\bp=([A-Za-z0-9+/=]+)/);const revoked=!pm||!pm[1];let keyBits='unknown';if(pm&&pm[1]){const b=Math.floor(pm[1].length*3/4);keyBits=b>=350?'2048-bit':b>=128?'1024-bit':'<1024-bit (weak)';}const sev=revoked?'critical':'pass';const desc=revoked?'Key is empty or revoked. DKIM signing is disabled.':`Public key found. Estimated size: ${keyBits}.${keyBits.includes('1024')||keyBits.includes('<')?' Consider upgrading to 2048-bit.':''}`;tally(sev);s3.resolve(sev==='pass'?'done':'fail');authCards.push(makeCard('DKIM record',sev,`${sel}._domainkey.${domain}`,desc,'dkim'));readiness.push({label:'DKIM signed',status:sev});}}
+  if(!sel){s3.resolve('info');authCards.push(makeCard('DKIM record','info','No selector provided','Enter your DKIM selector above to check this.','dkim'));readiness.push({label:'DKIM signed',status:'info'});}else if(!dkimRes||lookupFailed(dkimRes)){s3.resolve('info');authCards.push(makeCard('DKIM record','timeout',`${sel}._domainkey.${domain}`,`Lookup failed.`,'dkim'));readiness.push({label:'DKIM signed',status:'fail'});}else{const dkRecs=dkimRes.answer.map(a=>normTXT(a.data)).filter(d=>d.includes('p='));if(!dkRecs.length){s3.resolve('fail');tally('critical',`No DKIM record for selector "${sel}"`);authCards.push(makeCard('DKIM record','critical',`${sel}._domainkey.${domain}`,'No DKIM record found.','dkim','dkim_missing'));readiness.push({label:'DKIM signed',status:'fail'});}else{const dk=dkRecs[0];const pm=dk.match(/\bp=([A-Za-z0-9+/=]+)/);const revoked=!pm||!pm[1];let keyBits='unknown';if(pm&&pm[1]){const b=Math.floor(pm[1].length*3/4);keyBits=b>=256?'2048-bit':b>=128?'1024-bit':'<1024-bit (weak)';}const sev=revoked?'critical':'pass';const desc=revoked?'Key is empty or revoked. DKIM signing is disabled.':`Public key found. Estimated size: ${keyBits}.${keyBits.includes('1024')||keyBits.includes('<')?' Consider upgrading to 2048-bit.':''}`;tally(sev);s3.resolve(sev==='pass'?'done':'fail');authCards.push(makeCard('DKIM record',sev,`${sel}._domainkey.${domain}`,desc,'dkim'));readiness.push({label:'DKIM signed',status:sev});}}
   s4.resolve('done');sections.push({title:'Email authentication',cards:authCards});
   const dnsCards=[];if(!lookupFailed(mxRes)){const mx=mxRes.answer.filter(a=>a.type===15);if(!mx.length){tally('important');dnsCards.push(makeCard('MX records','important','No MX records','No MX records found. Replies bounce and your domain looks misconfigured.','mx'));}else{tally('pass');dnsCards.push(makeCard('MX records','pass',mx.sort((a,b)=>parseInt(a.data)-parseInt(b.data)).map(r=>r.data).join(', '),`${mx.length} MX record(s) found.`,'mx'));}}
   const bimiRec=bimiRes.status==='ok'?bimiRes.answer.map(a=>normTXT(a.data)).find(d=>d.includes('v=BIMI1')):null;if(bimiRec){tally('pass');dnsCards.push(makeCard('BIMI','pass',bimiRec,'BIMI configured. Logo can appear in Gmail, Yahoo and Apple Mail.','bimi'));readiness.push({label:'BIMI configured',status:'pass'});}else{dnsCards.push(makeCard('BIMI','info','Not configured','No BIMI record. Requires a strong DMARC policy first.','bimi'));readiness.push({label:'BIMI configured',status:'info'});}
@@ -726,10 +893,12 @@ function loadHdrFile(f){const reader=new FileReader();reader.onload=e=>{document
 function clearHeaders(){document.getElementById('headerInput').value='';document.getElementById('hdrResults').innerHTML='';document.getElementById('hdrResultsWrap').style.display='none';document.getElementById('hdrFileName').textContent='';document.getElementById('hdrFileInput').value='';}
 
 function analyzeHeaders(){
-  const raw=document.getElementById('headerInput').value.trim();if(!raw)return;
+  const rawInput=document.getElementById('headerInput').value.trim();if(!rawInput)return;
   document.getElementById('headerWrap').classList.add('at-top');
   const out=document.getElementById('hdrResults');out.innerHTML='';
   const wrap=document.getElementById('hdrResultsWrap');wrap.style.display='none';
+  // RFC 5322: unfold continuation lines (lines beginning with whitespace are part of the previous header)
+  const raw=rawInput.replace(/\r\n/g,'\n').replace(/\n[ \t]+/g,' ');
   const frag=document.createDocumentFragment();
   const get=(name)=>{const m=raw.match(new RegExp(`^${name}:\\s*(.+)$`,'im'));return m?m[1].trim():null;};
   const getAll=(name)=>{const re=new RegExp(`^${name}:\\s*(.+)$`,'gim');const res=[];let m;while((m=re.exec(raw))!==null)res.push(m[1].trim());return res;};
@@ -787,6 +956,12 @@ function switchTab(name,btn){
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('bugModal').classList.remove('open');}});
+
+// Enter-to-submit on the audit form inputs
+['domain','dkimSel','ip','returnPath'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!document.getElementById('runBtn').disabled){e.preventDefault();runAudit();}});
+});
 </script>
 </body>
 </html>
