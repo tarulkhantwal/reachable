@@ -712,20 +712,55 @@ async function forwardConfirm(hostname,ip){const res=await dnsLookup(hostname.re
 // Public DNSBLs queryable via DoH. MXToolbox isn't a real DNSBL (it's a tool).
 // SORBS shut down in June 2024 — removed. URIBL/SURBL public-tier rate-limits
 // browser-origin queries heavily — we keep them but expect occasional timeouts.
+// `validCodes` lists the actual response codes that mean "listed" — anything
+// else (especially 127.0.0.1 = refused, 127.255.255.x = rate-limited) is NOT
+// a real listing and must be treated as clean to avoid false positives.
 const IP_LISTS=[
-  {name:'Spamhaus ZEN',host:'zen.spamhaus.org',pos:'127.0.0.'},
-  {name:'Barracuda',host:'b.barracudacentral.org',pos:'127.0.0.2'},
-  {name:'SpamCop',host:'bl.spamcop.net',pos:'127.0.0.2'},
-  {name:'Spamhaus PBL',host:'pbl.spamhaus.org',pos:'127.0.0.'},
-  {name:'UCEPROTECT-1',host:'dnsbl-1.uceprotect.net',pos:'127.0.0.2'}
+  {name:'Spamhaus ZEN',host:'zen.spamhaus.org',validCodes:['127.0.0.2','127.0.0.3','127.0.0.4','127.0.0.9','127.0.0.10','127.0.0.11']},
+  {name:'Barracuda',host:'b.barracudacentral.org',validCodes:['127.0.0.2']},
+  {name:'SpamCop',host:'bl.spamcop.net',validCodes:['127.0.0.2']},
+  {name:'Spamhaus PBL',host:'pbl.spamhaus.org',validCodes:['127.0.0.10','127.0.0.11']},
+  {name:'UCEPROTECT-1',host:'dnsbl-1.uceprotect.net',validCodes:['127.0.0.2']}
 ];
 const DOM_LISTS=[
-  {name:'URIBL',host:'multi.uribl.com',pos:'127.0.0.'},
-  {name:'SURBL',host:'multi.surbl.org',pos:'127.0.0.'},
-  {name:'DBL Spamhaus',host:'dbl.spamhaus.org',pos:'127.0.1.'}
+  {name:'URIBL',host:'multi.uribl.com',validCodes:['127.0.0.2','127.0.0.4','127.0.0.8']},
+  {name:'SURBL',host:'multi.surbl.org',validCodes:['127.0.0.2','127.0.0.4','127.0.0.8','127.0.0.16','127.0.0.32','127.0.0.64']},
+  {name:'DBL Spamhaus',host:'dbl.spamhaus.org',validCodes:['127.0.1.2','127.0.1.4','127.0.1.5','127.0.1.6']}
 ];
-async function checkIPBlacklists(ip){const rev=isIPv6(ip)?reverseIPv6(ip):reverseIPv4(ip);return Promise.all(IP_LISTS.map(async l=>{const r=await dnsLookup(`${rev}.${l.host}`,'A');if(lookupFailed(r))return{name:l.name,result:'timeout'};if(r.status==='nxdomain'||!r.answer.length)return{name:l.name,result:'clean'};return{name:l.name,result:r.answer.some(a=>a.data.startsWith(l.pos))?'listed':'clean',code:r.answer[0]?.data};}));}
-async function checkDomainBlacklists(domain){return Promise.all(DOM_LISTS.map(async l=>{const r=await dnsLookup(`${domain}.${l.host}`,'A');if(lookupFailed(r))return{name:l.name,result:'timeout'};if(r.status==='nxdomain'||!r.answer.length)return{name:l.name,result:'clean'};return{name:l.name,result:r.answer.some(a=>a.data.startsWith(l.pos))?'listed':'clean'};}));}
+
+// Codes that explicitly mean "your query was refused / you're rate-limited"
+// — never a real listing. We log these as 'refused' (treated as clean).
+function isRefusedCode(code){
+  if(!code)return false;
+  if(code==='127.0.0.1')return true;                  // generic refusal on many DNSBLs
+  if(code.startsWith('127.255.'))return true;         // URIBL/SURBL rate-limit responses
+  return false;
+}
+async function checkIPBlacklists(ip){
+  const rev=isIPv6(ip)?reverseIPv6(ip):reverseIPv4(ip);
+  return Promise.all(IP_LISTS.map(async l=>{
+    const r=await dnsLookup(`${rev}.${l.host}`,'A');
+    if(lookupFailed(r))return{name:l.name,result:'timeout'};
+    if(r.status==='nxdomain'||!r.answer.length)return{name:l.name,result:'clean'};
+    const codes=r.answer.map(a=>a.data);
+    // Refused/rate-limited codes are NOT real listings
+    if(codes.every(isRefusedCode))return{name:l.name,result:'refused',code:codes[0]};
+    // Only flag as listed if at least one response matches a known valid code
+    const listed=codes.some(c=>l.validCodes.includes(c));
+    return{name:l.name,result:listed?'listed':'clean',code:codes[0]};
+  }));
+}
+async function checkDomainBlacklists(domain){
+  return Promise.all(DOM_LISTS.map(async l=>{
+    const r=await dnsLookup(`${domain}.${l.host}`,'A');
+    if(lookupFailed(r))return{name:l.name,result:'timeout'};
+    if(r.status==='nxdomain'||!r.answer.length)return{name:l.name,result:'clean'};
+    const codes=r.answer.map(a=>a.data);
+    if(codes.every(isRefusedCode))return{name:l.name,result:'refused',code:codes[0]};
+    const listed=codes.some(c=>l.validCodes.includes(c));
+    return{name:l.name,result:listed?'listed':'clean',code:codes[0]};
+  }));
+}
 function orgDomain(d){const p=d.split('.');return p.length<=2?d:p.slice(-2).join('.');}
 
 function streamLog(msg,state='running'){
@@ -903,7 +938,7 @@ async function auditDomain(domain,sel,rpDomain,tally,readiness,runId){
   const mtaRec=mtaRes.status==='ok'?mtaRes.answer.map(a=>normTXT(a.data)).find(d=>d.includes('v=STSv1')):null;if(mtaRec){tally('pass');dnsCards.push(makeCard('MTA-STS','pass',mtaRec,'MTA-STS enforces TLS for inbound email.','tls'));readiness.push({label:'TLS enforced',status:'pass'});}else{dnsCards.push(makeCard('MTA-STS','info','Not configured','No MTA-STS policy found.','tls'));readiness.push({label:'TLS enforced',status:'info'});}
   sections.push({title:'DNS infrastructure',cards:dnsCards});
   if(rpDomain&&rpDomain!==domain&&rpSpfRes){const rpCards=[];if(lookupFailed(rpSpfRes)){rpCards.push(makeCard('Return-path SPF','timeout','',`Lookup failed for ${rpDomain}.`,'spf'));}else{const rp=rpSpfRes.answer.map(a=>normTXT(a.data)).find(d=>d.startsWith('v=spf1'));if(!rp){tally('important');rpCards.push(makeCard('Return-path SPF','important','No SPF on bounce domain',`${rpDomain} has no SPF. SPF alignment via envelope sender will fail.`,'spf'));}else{tally('pass');rpCards.push(makeCard('Return-path SPF','pass',rp,`SPF found on ${rpDomain}.`,'spf'));}}sections.push({title:'Return-path / bounce domain',cards:rpCards});}
-  s5.resolve('done');const domBLCards=[];domBL.forEach(r=>{if(r.result==='timeout'){domBLCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}else if(r.result==='listed'){tally('critical',`Domain listed on ${r.name}`);domBLCards.push(makeCard(r.name,'critical','',`${domain} is listed on ${r.name}. Fix the root cause before requesting removal.`,'blacklist'));}else{tally('pass');domBLCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}});
+  s5.resolve('done');const domBLCards=[];domBL.forEach(r=>{if(r.result==='timeout'){domBLCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}else if(r.result==='refused'){domBLCards.push(makeCard(r.name,'info',r.code||'',`${r.name} refused the query (rate-limited or restricted to paying customers). Treating as clean.`,'blacklist'));}else if(r.result==='listed'){tally('critical',`Domain listed on ${r.name}`);domBLCards.push(makeCard(r.name,'critical',r.code||'',`${domain} is listed on ${r.name} (code ${r.code}). Fix the root cause before requesting removal.`,'blacklist'));}else{tally('pass');domBLCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}});
   sections.push({title:'Domain blacklists',cards:domBLCards});return sections;
 }
 
@@ -912,7 +947,7 @@ async function auditIP(ip,tally,readiness){
   const ptrZone=isIPv6(ip)?`${reverseIPv6(ip)}.ip6.arpa`:`${reverseIPv4(ip)}.in-addr.arpa`;
   const[ptrRes,blRes]=await Promise.all([dnsLookup(ptrZone,'PTR'),checkIPBlacklists(ip)]);
   if(lookupFailed(ptrRes)){s1.resolve('info');ipCards.push(makeCard('Reverse DNS (PTR)','timeout',ptrZone,'Lookup timed out.','rdns'));}else{const ptrs=ptrRes.answer.filter(a=>a.type===12);if(!ptrs.length){s1.resolve('fail');tally('critical',`No PTR record for ${ip}`);ipCards.push(makeCard('Reverse DNS (PTR)','critical',ptrZone,`No PTR for ${ip}. Missing rDNS is a strong spam signal.`,'rdns'));readiness.push({label:'rDNS configured',status:'fail'});}else{const confirms=await Promise.all(ptrs.map(async p=>({hostname:p.data.replace(/\.$/,''),confirmed:await forwardConfirm(p.data.replace(/\.$/,''),ip)})));const all=confirms.every(r=>r.confirmed);const any=confirms.some(r=>r.confirmed);const sev=all?'pass':any?'important':'critical';const val=confirms.map(r=>`${r.hostname} (${r.confirmed?'forward-confirmed':'not confirmed'})`).join(', ');const desc=all?'PTR found and forward-confirmed.':any?`PTR found but not all hostnames forward-confirm back to ${ip}.`:`PTR exists but does not forward-confirm.`;tally(sev);s1.resolve(sev==='pass'?'done':sev==='critical'?'fail':'warn');ipCards.push(makeCard('Reverse DNS (PTR)',sev,val,desc,'rdns'));readiness.push({label:'rDNS configured',status:sev==='pass'?'pass':'fail'});}}
-  s2.resolve('done');blRes.forEach(r=>{if(r.result==='timeout'){ipCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}else if(r.result==='listed'){tally('critical',`IP listed on ${r.name}`);ipCards.push(makeCard(r.name,'critical',r.code||'',`${ip} is listed on ${r.name}.`,'blacklist'));}else{tally('pass');ipCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}});
+  s2.resolve('done');blRes.forEach(r=>{if(r.result==='timeout'){ipCards.push(makeCard(r.name,'timeout','','Lookup timed out.','blacklist'));}else if(r.result==='refused'){ipCards.push(makeCard(r.name,'info',r.code||'',`${r.name} refused the query (rate-limited or restricted). Treating as clean.`,'blacklist'));}else if(r.result==='listed'){tally('critical',`IP listed on ${r.name}`);ipCards.push(makeCard(r.name,'critical',r.code||'',`${ip} is listed on ${r.name} (code ${r.code}).`,'blacklist'));}else{tally('pass');ipCards.push(makeCard(r.name,'pass','',`Not listed on ${r.name}.`,'blacklist'));}});
   return{title:`IP checks (${ip})`,cards:ipCards};
 }
 
